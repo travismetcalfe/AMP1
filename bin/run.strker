@@ -1,0 +1,132 @@
+#!/bin/csh
+#  driver for kernel-setting programme, for WB models
+
+# Hard-code directory names
+
+set amdldir = "."
+set amdedir = "."
+set kerdir = "numker"
+
+if($#argv < 3) then
+  echo "Usage:"
+  echo "run-strker <model> <case> <kernel case> "
+  echo "case:"
+  echo "         1.  Eulerian ln(c^2) and ln(rho)"
+  echo "         2.  Eulerian ln(Gamma1) and ln(rho)"
+  echo "         3.  Eulerian ln(c^2) and ln(Gamma1)"
+  echo "         4.  Eulerian ln(u) and ln(Gamma1)"
+  echo "         5.  Eulerian ln(u) and Y"
+  echo "         6.  Eulerian ln(rho) and Y"
+  echo "         7.  Eulerian ln(c) and ln(Gamma1/c)"
+  echo "        11.  Lagrangian ln(c^2) and ln(rho)"
+  echo "        12.  Lagrangian ln(Gamma1) and ln(rho)"
+  echo "        13.  Lagrangian ln(c^2) and ln(Gamma1)"
+  echo "        14.  Lagrangian ln(u) and ln(Gamma1)"
+  echo "        17.  Lagrangian ln(c) and ln(Gamma1/c)"
+  exit(1)
+endif
+
+# test for existence of output directory; make it if it does not exist
+
+if(-d $kerdir) then
+else
+	mkdir $kerdir
+	echo "Making " $kerdir
+endif
+
+set case = $2
+set kercase = $3
+
+switch($kercase)
+	case 1:
+		set dif = ""
+		set var12 = c2-rho
+		set var21 = rho-c2
+		breaksw
+	case 2:
+		set dif = ""
+		set var12 = gam1-rho
+		set var21 = rho-gam1
+		breaksw
+	case 3:
+		set dif = ""
+		set var12 = c2-gam1
+		set var21 = gam1-c2
+		breaksw
+	case 4:
+		set dif = ""
+		set var12 = u-gam1
+		set var21 = gam1-u
+		breaksw
+	case 5:
+		set dif = ""
+		set var12 = u-Y
+		set var21 = Y-u
+		breaksw
+	case 6:
+		set dif = ""
+		set var12 = rho-Y
+		set var21 = Y-rho
+		breaksw
+	case 7:
+		set dif = ""
+		set var12 = c-ups
+		set var21 = ups-c
+		breaksw
+	case 11:
+		set dif = ".lag"
+		set var12 = c2-rho
+		set var21 = rho-c2
+		breaksw
+	case 12:
+		set dif = ".lag"
+		set var12 = gam1-rho
+		set var21 = rho-gam1
+		breaksw
+	case 13:
+		set dif = ".lag"
+		set var12 = c2-gam1
+		set var21 = gam1-c2
+		breaksw
+	case 14:
+		set dif = ".lag"
+		set var12 = u-gam1
+		set var21 = gam1-u
+		breaksw
+	case 15:
+		set dif = ".lag"
+		set var12 = u-Y
+		set var21 = Y-u
+		breaksw
+	case 16:
+		set dif = ".lag"
+		set var12 = rho-Y
+		set var21 = Y-rho
+		breaksw
+	case 17:
+		set dif = ".lag"
+		set var12 = c-ups
+		set var21 = ups-c
+		breaksw
+	default:
+		echo "Case " $kercase " not allowed"
+		exit(1)
+endsw
+
+echo "model, dif, var12, var21" $1 $dif $var12 $var21
+
+echo "s/#case/"$case"/" > tmp_sed$$
+echo "s/#kercase/"$kercase"/" >> tmp_sed$$
+echo "s(#amdldir("$amdldir"(" >> tmp_sed$$
+echo "s(#amdedir("$amdedir"(" >> tmp_sed$$
+echo "s(#kerdir("$kerdir"(" >> tmp_sed$$
+echo "s/#model/"$1"/" >> tmp_sed$$
+echo "s/#dif/"$dif"/" >> tmp_sed$$
+echo "s/#var12/"$var12"/" >> tmp_sed$$
+echo "s/#var21/"$var21"/" >> tmp_sed$$
+
+sed -f tmp_sed$$ $eprgdir/bin/rin/strker.rin > tmp_in$$
+
+run-strker tmp_in$$ ttt$dif.$var12.$1
+rm tmp_sed$$ tmp_in$$
+

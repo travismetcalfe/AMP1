@@ -1,0 +1,705 @@
+#  Modified 28/10/03, including version v9h of opacity package, with fix
+#  for problem in Z-interpolation. E.g., in evol.dbz-liv019h.d.x.
+
+#  Modified 19/12/07, moving opingh to CO..., to allow choice between two
+#  different versions of common/cofile/
+
+FC = f77
+FFLAGS = -O2
+
+#JCD = /ai43/jcd/47tuc/evolpack_071206
+JCD = /local/i/jcd/evolpack_10/evolpack_ref
+HG = $(JCD)/opal
+TJCD = $(JCD)
+THG = $(HG)
+LDIR = $(JCD)/gensr
+OPDIR6 = $(TJCD)/opal/gh_int.v6/lib
+OPDIR9h = $(TJCD)/opal/v9h/lib
+OPDIR9 = $(HG)/v9/lib
+OPDIR10 = $(THG)/v10/lib
+OPDIR11 = $(THG)/v11/lib
+
+AUX = $(JCD)/auxprg
+
+CDIR = $(TJCD)/prg
+CLMDIR = $(CDIR)/coulomb
+MDIR = $(CDIR)/mhd
+LIVDIR = $(CDIR)/livermore
+
+ADI = $(JCD)/adi
+STRKER = $(JCD)/strker
+
+LO = \
+$(LDIR)/leq.d.o $(LDIR)/zero.d.o $(LDIR)/izero.o $(LDIR)/surf12.d.o \
+$(LDIR)/store.d.o $(LDIR)/istore.o $(LDIR)/cpychr.o  $(LDIR)/length.o \
+$(LDIR)/ofiles.o $(LDIR)/rnmean.d.o $(LDIR)/vinta.d.o $(LDIR)/derive.d.o \
+$(LDIR)/vintk.new.d.o $(LDIR)/lirk.d.o $(LDIR)/lir.d.o $(LDIR)/blstio.o \
+$(LDIR)/setusr-hao.o $(LDIR)/setscr.o $(LDIR)/loctim.o $(LDIR)/skpcom.o \
+$(LDIR)/craysub.d.o $(LDIR)/infnte-tm.o $(LDIR)/strcompr.o \
+$(LDIR)/str_replace.o $(LDIR)/intgpt.d.o
+
+LO.C = \
+$(LDIR)/leq.d.o $(LDIR)/zero.d.o $(LDIR)/izero.o $(LDIR)/surf12.d.o \
+$(LDIR)/store.d.o $(LDIR)/istore.o $(LDIR)/cpychr.o  $(LDIR)/length.o \
+$(LDIR)/ofiles.c.o $(LDIR)/rnmean.d.o $(LDIR)/vinta.d.o $(LDIR)/derive.d.o \
+$(LDIR)/vintk.new.d.o $(LDIR)/lirk.d.o $(LDIR)/lir.d.o $(LDIR)/blstio.o \
+$(LDIR)/setusr-hao.o $(LDIR)/setscr.o $(LDIR)/loctim.o $(LDIR)/skpcom.o \
+$(LDIR)/craysub.d.o $(LDIR)/infnte-tm.o $(LDIR)/strcompr.o \
+$(LDIR)/str_replace.o $(LDIR)/intgpt.d.o
+
+LOA = $(LDIR)/aramax.d.o $(LDIR)/derivk.new.d.o $(LDIR)/notwin.d.o \
+$(LDIR)/notwni.o $(LDIR)/lininh.new.d.o $(LDIR)/lininh4.d.o \
+$(LDIR)/eiginh.d.o $(LDIR)/spline.d.o $(LDIR)/nrk.d.o
+
+#  o-files for physics, depending on equation of state
+
+EFF-O = \
+	setcns-g.d.o eqstf.d.o eqstrh.d.o
+
+CEFF-O = \
+$(CLMDIR)/setcns-gc.d.o $(CLMDIR)/eqstfcni.d.o \
+	$(CLMDIR)/eqstrhc.d.o $(CLMDIR)/f4der.o 
+
+MHD-O.NNZ = \
+$(MDIR)/setcns-int.nnz.d.o $(MDIR)/eqstf-int.n.d.o \
+	$(MDIR)/eqstrh-int.d.o 
+
+LIV-O = \
+	$(LIVDIR)/setcns-liv.n.d.o $(LIVDIR)/eqstf-liv.n.d.o \
+	$(LIVDIR)/esac-liv.n.o 
+
+LIV-O.NNZ = \
+	$(LIVDIR)/setcns-liv.nnz.d.o $(LIVDIR)/eqstf-liv.nnz.d.o \
+	$(LIVDIR)/esac-liv.nnz.d.o 
+
+LIV-O.DG.NNZ = \
+	$(LIVDIR)/setcns-liv.dg.nnz.d.o $(LIVDIR)/eqstf-liv.nnz.d.o \
+	$(LIVDIR)/esac-liv.nnz.d.o 
+
+LIV01-O.NNZ = \
+	$(LIVDIR)/setcns-liv.nnz.d.o $(LIVDIR)/eqstf-liv01.nnz.d.o \
+	$(LIVDIR)/esac-liv01.nnz.d.o 
+
+LIV01Z-O.NNZ = \
+	$(LIVDIR)/setcns-livz.nnz.d.o $(LIVDIR)/eqstf-liv01z.nnz.d.o \
+	$(LIVDIR)/esac-liv01z.nnz.d.o 
+
+LIV05-O.BZ = \
+	$(LIVDIR)/setcns-liv.bz.d.o $(LIVDIR)/eqstf-liv05.bz.d.o \
+	$(LIVDIR)/esac-liv05.bz.d.o
+
+ENG-O = \
+srncns-3.n.d.o engenr.n.d.o engcno.n.d.o he3abd.n.d.o \
+elscrn.n.d.o setxh3.d.o almmxc.n.d.o he3abc.n.d.o setcno.nnz.d.o
+
+ENG-O.BZ = \
+srncns-3.bz.d.o engenr.bz.d.o engcno.bz.d.o enghec.bz.d.o rnrhec.bz.d.o \
+he3abd.bz.d.o \
+elscrn.n.d.o setxh3.nz.d.o almmxc.n.d.o he3abc.n.d.o setcno.bz.d.o \
+nacrern.bz.d.o
+
+AOFILES.C = \
+$(ADI)/adipls.c.d.o $(ADI)/anldet.d.o \
+$(ADI)/cmparr.d.o $(ADI)/danorm.d.o $(ADI)/decicd.d.o \
+$(ADI)/dmpgsm.d.o $(ADI)/dmpmde.d.o $(ADI)/dmpsum.d.o \
+$(ADI)/geninh.d.o $(ADI)/gm1ker.n.d.o $(ADI)/gravpo.n.d.o \
+$(ADI)/kiner.n.d.o $(ADI)/mchcff.d.o $(ADI)/order.d.o $(ADI)/takata.d.o \
+$(ADI)/readml.n.d.o \
+$(ADI)/res_adimod.c.d.o $(ADI)/readsm.d.o $(ADI)/adirhs.c.d.o \
+$(ADI)/rotker.c.d.o \
+$(ADI)/trnmod.n.d.o $(ADI)/setbcs.n.d.o $(ADI)/setssm.n.d.o \
+$(ADI)/signew.n.d.o $(ADI)/rdfrqr.d.o $(ADI)/varfrq.n.d.o \
+$(ADI)/xlmult.d.o $(ADI)/nrkint.c.d.o $(ADI)/nrtssl.d.o $(ADI)/stevft.n.d.o \
+$(ADI)/shtint.c.d.o $(ADI)/mchsol.n.d.o \
+$(ADI)/sclasl.c.d.o $(ADI)/nrkm.d.o $(ADI)/setsum.d.o $(ADI)/sumout.d.o \
+$(ADI)/sigint.n.d.o $(ADI)/sigitr.n.d.o $(ADI)/sigitc.c.d.o \
+$(ADI)/sigsol.n.d.o $(ADI)/sigout.c.d.o $(ADI)/sigscn.c.d.o \
+$(ADI)/rsnfit.n.d.o $(ADI)/res_adipar.c.d.o $(ADI)/setups_adi.c.d.o \
+$(ADI)/setobs_st.c.d.o $(ADI)/set_rotation.c.d.o $(ADI)/dump_obs.c.d.o \
+$(ADI)/delta1.d.o $(ADI)/delta2.d.o \
+$(ADI)/delta3.d.o $(ADI)/sph.d.o \
+$(ADI)/uhx.d.o
+
+
+
+EFF-PHYS.BZ = \
+	$(EFF-O) \
+	eqstp.d.o \
+	opact-nnz.d.o \
+	opalkz.o \
+	$(ENG-O.BZ)
+
+
+CEFF-PHYS.BZ = \
+	$(CEFF-O) \
+	eqstp.d.o \
+	opact-nnz.d.o \
+	$(ENG-O.BZ)
+
+MHD-PHYS.NNZ = \
+	$(MHD-O.NNZ) \
+	eqstp.d.o \
+	inteff.d.o \
+	phder.d.o \
+	opact-nnz.d.o \
+	$(ENG-O.NNZ)
+
+LIV-PHYS.BZ = \
+	$(LIV-O.NNZ) \
+	bleqst.d.o \
+	eqstp.d.o \
+	inteff.d.o \
+	phder.d.o \
+	opact-nnz.d.o \
+	opalkz.o \
+	$(ENG-O.BZ)
+
+LIV-PHYS.DG.BZ = \
+	$(LIV-O.DG.NNZ) \
+	bleqst.d.o \
+	eqstp.d.o \
+	inteff.d.o \
+	phder.d.o \
+	opact-nnz.d.o \
+	$(ENG-O.BZ)
+
+LIV01-PHYS.BZ = \
+	$(LIV01-O.NNZ) \
+	bleqst.d.o \
+	eqstp.d.o \
+	inteff.d.o \
+	phder.d.o \
+	opact-nnz.d.o \
+	opalkz.o \
+	$(ENG-O.BZ)
+
+LIV01Z-PHYS.BZ = \
+	$(LIV01Z-O.NNZ) \
+	bleqst.d.o \
+	eqstp.d.o \
+	inteff.d.o \
+	phder.d.o \
+	opact-nnz.d.o \
+	opalkz.o \
+	$(ENG-O.BZ)
+
+LIV05-PHYS.BZ = \
+	$(LIV05-O.BZ) \
+	bleqst.d.o \
+	eqstp.d.o \
+	inteff.d.o \
+	phder.d.o \
+	opact-nnz.d.o \
+	opalkz.o \
+	$(ENG-O.BZ)
+
+O.BZ = \
+main.bz.d.o \
+evolmain.bz.d.o \
+evolrhs.bz.d.o \
+evolbcs.bz.d.o \
+incomp.bz.d.o
+
+O.CZ = \
+main.cz.d.o \
+setups_main.cz.d.o \
+evolmain.cz.d.o \
+evolrhs.bz.d.o \
+evolbcs.bz.d.o \
+incomp.bz.d.o
+
+OP.CZ = \
+main.cpz.d.o \
+setups_main.cz.d.o \
+evolmain.cz.d.o \
+dump_csum.cz.d.o \
+evolrhs.bz.d.o \
+evolbcs.bz.d.o \
+incomp.bz.d.o
+
+OAP.CZ = \
+main.capz.d.o \
+setups_main.cz.d.o \
+setups_package.cz.d.o \
+set_modage.cz.d.o \
+trial_grid.cz.d.o \
+evolmain.cz.d.o \
+dump_csum.cz.d.o \
+evolrhs.bz.d.o \
+evolbcs.bz.d.o \
+incomp.bz.d.o
+
+OAM.CZ = \
+main.camz.d.o \
+setups_main.cz.d.o \
+setups_package.cz.d.o \
+set_modagez.cz.d.o \
+trial_gridz.cz.d.o \
+evolmain.cz.d.o \
+dump_csum.cz.d.o \
+evolrhs.bz.d.o \
+evolbcs.bz.d.o \
+incomp.bz.d.o
+
+ADI_OP.CZ = \
+main_adi.capz.d.o \
+setups_main.cz.d.o \
+setups_package.cz.d.o \
+$(AUX)/adisr/rseta4.c.d.o
+
+O.DBZ = \
+main.dbz.d.o \
+evolmain.dbz.d.o \
+evolrhs.bz.d.o \
+evolrhs.dbzt.d.o \
+evolbcs.bz.d.o \
+evolbcs.dbz.d.o \
+cpydif.dbz.d.o \
+stdifv.dbz.d.o \
+difcff.dbz.d.o \
+difcft.dn.d.o \
+difcfu.dn.d.o \
+smdifx.dbz.d.o \
+incomp.dbz.d.o
+
+O.DCZ = \
+main.dcz.d.o \
+evolmain.dcz.d.o \
+setups_main.dcz.d.o \
+evolrhs.bz.d.o \
+evolrhs.dbz.d.o \
+evolbcs.bz.d.o \
+evolbcs.dbz.d.o \
+cpydif.dbz.d.o \
+stdifv.dbz.d.o \
+difcff.dbz.d.o \
+difcft.dn.d.o \
+difcfu.dn.d.o \
+smdifx.dbz.d.o \
+incomp.dbz.d.o
+
+OAP.DCZ = \
+main.dcapz.d.o \
+setups_main.dcz.d.o \
+setups_package.cz.d.o \
+trial_grid.cz.d.o \
+set_modage.cz.d.o \
+evolmain.dcz.d.o \
+dump_csum.cz.d.o \
+evolrhs.bz.d.o \
+evolrhs.dbz.d.o \
+evolbcs.bz.d.o \
+evolbcs.dbz.d.o \
+cpydif.dbz.d.o \
+stdifv.dbz.d.o \
+difcff.dbz.d.o \
+difcft.dn.d.o \
+difcfu.dn.d.o \
+smdifx.dbz.d.o \
+incomp.dbz.d.o
+
+OAM.DCZ = \
+main.camz.d.o \
+setups_main.dcz.d.o \
+setups_package.cz.d.o \
+set_modagez.cz.d.o \
+trial_gridz.cz.d.o \
+evolmain.dcz.d.o \
+dump_csum.cz.d.o \
+evolrhs.bz.d.o \
+evolrhs.dbz.d.o \
+evolbcs.bz.d.o \
+evolbcs.dbz.d.o \
+cpydif.dbz.d.o \
+stdifv.dbz.d.o \
+difcff.dbz.d.o \
+difcft.dn.d.o \
+difcfu.dn.d.o \
+smdifx.dbz.d.o \
+incomp.dbz.d.o
+
+
+#  Note: conmix.bz.d.o replaced by conmix.cz.d.o to avoid resetting
+#  of convective-core limit in conmix (29/9/03)
+
+CO.BZ = \
+opingh.o \
+bciter.bz.d.o \
+bcscen.bz.d.o  \
+rsksdr.n.d.o \
+evolatmos.bz.d.o \
+ttau.nnz.d.o \
+patmit.nz.d.o \
+tstrhsbcs.d.o \
+mixlng.bz.d.o \
+mxlmjm.bz.d.o \
+tstmxl.bz.d.o \
+stxhdr.bz.d.o \
+conmix.cz.d.o  \
+conmxc.cz.d.o  \
+mixcor.bz.d.o  \
+fdrad.bz.d.o  \
+cmpcvc.bz.d.o  \
+rxhmxc.bz.d.o \
+extcno.bz.d.o \
+setcvr.bz.d.o \
+setcbr.n.d.o \
+setovs.n.d.o \
+tnrkt.n.d.o  \
+leqpr.d.o  \
+pushy.bz.d.o   \
+setdt.bz.d.o \
+redtst.n.d.o \
+mshstr.cz.d.o  \
+rczmsh.bz.d.o \
+sethvz.bz.d.o \
+sthvab.d.o \
+settrl.bz.d.o \
+rdemdl.n.d.o \
+sclcbc.d.o \
+sclsol.n.d.o \
+prtsol.bz.d.o \
+rsamdl.d.o \
+scnfil.bz.d.o \
+spcinp.d.o \
+spcout.d.o \
+tstxin.nz.d.o \
+setrot.d.o \
+shftal.bz.d.o \
+tstcvg.bz.d.o \
+stescr.n.d.o 
+
+CO.CZ = \
+opingh.c.o \
+bciter.bz.d.o \
+bcscen.bz.d.o  \
+rsksdr.n.d.o \
+evolatmos.bz.d.o \
+ttau.nnz.d.o \
+patmit.nz.d.o \
+tstrhsbcs.d.o \
+mixlng.nnz.d.o \
+mxlmjm.bz.d.o \
+tstmxl.bz.d.o \
+stxhdr.bz.d.o \
+conmix.cz.d.o  \
+conmxc.cz.d.o  \
+mixcor.cz.d.o  \
+fdrad.cz.d.o  \
+cmpcvc.cz.d.o  \
+rxhmxc.cz.d.o \
+extcno.bz.d.o \
+setcvr.bz.d.o \
+setcbr.n.d.o \
+setovs.n.d.o \
+tnrkt.n.d.o  \
+leqpr.d.o  \
+pushy.bz.d.o   \
+setdt.cz.d.o \
+redtst.n.d.o \
+mshstr.bz.d.o  \
+rczmsh.cz.d.o \
+sethvz.cz.d.o \
+sthvab.d.o \
+settrl.cz.d.o \
+mstore_emdl.cz.d.o \
+rdemdl.n.d.o \
+sclcbc.d.o \
+sclsol.n.d.o \
+prtsol.cz.d.o \
+trfder.d.o \
+rsamdl.d.o \
+scnfil.bz.d.o \
+spcinp.d.o \
+spcout.d.o \
+tstxin.nz.d.o \
+setrot.d.o \
+shftal.bz.d.o \
+tstcvg.bz.d.o \
+res_param.cz.d.o \
+print_par.cz.d.o \
+tstcon.cz.d.o \
+settrailer.o \
+stescr.n.d.o 
+
+evol.b9z.d.x: $(O.BZ) $(CO.BZ) $(EFF-PHYS.BZ) lofiles oplib9
+	$(FC) $(FFLAGS) -o evol.b9z.d.x $(O.BZ) $(CO.BZ) $(EFF-PHYS.BZ) \
+	$(LO) $(OPDIR9)/libopint.a
+
+evol.b10z.d.x: $(O.BZ) $(CO.BZ) $(EFF-PHYS.BZ) lofiles oplib10
+	$(FC) $(FFLAGS) -o evol.b10z.d.x $(O.BZ) $(CO.BZ) $(EFF-PHYS.BZ) \
+	$(LO) $(OPDIR10)/libopint.a
+
+evol.c9z.d.x: $(O.CZ) $(CO.CZ) $(EFF-PHYS.BZ) lofiles.c oplib9
+	$(FC) $(FFLAGS) -o evol.c9z.d.x $(O.CZ) $(CO.CZ) $(EFF-PHYS.BZ) \
+	$(LO.C) $(OPDIR9)/libopint.a
+
+evol.c11z.d.x: $(O.CZ) $(CO.CZ) $(EFF-PHYS.BZ) lofiles.c oplib11
+	$(FC) $(FFLAGS) -o evol.c11z.d.x $(O.CZ) $(CO.CZ) $(EFF-PHYS.BZ) \
+	$(LO.C) $(OPDIR11)/libopint.a
+
+evol.cp9z.d.x: $(OP.CZ) $(CO.CZ) $(EFF-PHYS.BZ) lofiles.c
+	$(FC) $(FFLAGS) -o evol.cp9z.d.x $(OP.CZ) $(CO.CZ) $(EFF-PHYS.BZ) \
+	$(LO.C) $(OPDIR9)/libopint.a
+
+evol.cap9z.d.x: $(OAP.CZ) $(CO.CZ) $(EFF-PHYS.BZ) lofiles.c auxprg adi
+	$(FC) $(FFLAGS) -o evol.cap9z.d.x $(OAP.CZ) $(CO.CZ) $(EFF-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR9)/libopint.a
+
+evol.cam9z.d.x: $(OAM.CZ) $(CO.CZ) $(EFF-PHYS.BZ) lofiles.c auxprg adi
+	$(FC) $(FFLAGS) -o evol.cam9z.d.x $(OAM.CZ) $(CO.CZ) $(EFF-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR9)/libopint.a
+
+evol.cam11z.d.x: $(OAM.CZ) $(CO.CZ) $(EFF-PHYS.BZ) lofiles.c auxprg adi
+	$(FC) $(FFLAGS) -o evol.cam11z.d.x $(OAM.CZ) $(CO.CZ) $(EFF-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR11)/libopint.a
+
+evol.dcamliv0511z.d.x: $(OAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) lofiles.c auxprg adi
+	$(FC) $(FFLAGS) -o evol.dcamliv0511z.d.x \
+	$(OAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR11)/libopint.a
+
+evol.cap10z.d.x: $(OAP.CZ) $(CO.CZ) $(EFF-PHYS.BZ) lofiles.c auxprg adi
+	$(FC) $(FFLAGS) -o evol.cap10z.d.x $(OAP.CZ) $(CO.CZ) $(EFF-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR10)/libopint.a
+
+evol.bz-liv019.d.x: $(O.BZ) $(CO.BZ) $(LIV01-PHYS.BZ) lofiles oplib9 \
+	liv01-ofiles.nnz
+	$(FC) $(FFLAGS) -o evol.bz-liv019.d.x $(O.BZ) $(CO.BZ) \
+	$(LIV01-PHYS.BZ) $(LO) \
+	$(OPDIR9)/libopint.a
+
+evol.db9z.d.x: $(O.DBZ) $(CO.BZ) $(EFF-PHYS.BZ) lofiles oplib9
+	$(FC) $(FFLAGS) -o evol.db9z.d.x $(O.DBZ) $(CO.BZ) \
+	$(EFF-PHYS.BZ) $(LO) \
+	$(OPDIR9)/libopint.a
+
+evol.dc11z.d.x: $(O.DCZ) $(CO.CZ) $(EFF-PHYS.BZ) lofiles.c oplib11
+	$(FC) $(FFLAGS) -o evol.dc11z.d.x $(O.DCZ) $(CO.CZ) \
+	$(EFF-PHYS.BZ) $(LO.C) \
+	$(OPDIR11)/libopint.a
+
+evol.dcap9z.d.x: $(OAP.DCZ) $(CO.CZ) $(EFF-PHYS.BZ) lofiles.c auxprg adi
+	$(FC) $(FFLAGS) -o evol.dcap9z.d.x $(OAP.DCZ) $(CO.CZ) $(EFF-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR9)/libopint.a
+
+evol.dcap9z-liv.d.x: $(OAP.DCZ) $(CO.CZ) $(LIV-PHYS.BZ) lofiles.c auxprg adi
+	$(FC) $(FFLAGS) -o evol.dcap9z-liv.d.x $(OAP.DCZ) $(CO.CZ) \
+	$(LIV-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR9)/libopint.a
+
+evol.dbz-liv9.d.x: liv-ofiles.nnz $(O.DBZ) $(CO.BZ) $(LIV-PHYS.BZ) \
+	liv-ofiles.nnz lofiles oplib9
+	$(FC) $(FFLAGS) -o evol.dbz-liv9.d.x $(O.DBZ) $(CO.BZ) \
+	$(LIV-PHYS.BZ) $(LO) \
+	$(OPDIR9)/libopint.a
+
+evol.dbz-liv10.d.x: liv-ofiles.nnz $(O.DBZ) $(CO.BZ) $(LIV-PHYS.BZ) \
+	liv-ofiles.nnz lofiles oplib10
+	$(FC) $(FFLAGS) -o evol.dbz-liv10.d.x $(O.DBZ) $(CO.BZ) \
+	$(LIV-PHYS.BZ) $(LO) \
+	$(OPDIR10)/libopint.a
+
+evol.dbz-liv11.d.x: liv-ofiles.nnz $(O.DBZ) $(CO.BZ) $(LIV-PHYS.BZ) \
+	liv-ofiles.nnz lofiles oplib11
+	$(FC) $(FFLAGS) -o evol.dbz-liv11.d.x $(O.DBZ) $(CO.BZ) \
+	$(LIV-PHYS.BZ) $(LO) \
+	$(OPDIR11)/libopint.a
+
+evol.dbz-liv9.dg.d.x: liv-ofiles.dg.nnz $(O.DBZ) $(CO.BZ) $(LIV-PHYS.DG.BZ) \
+	liv-ofiles.dg.nnz lofiles oplib9
+	$(FC) $(FFLAGS) -o evol.dbz-liv9.dg.d.x $(O.DBZ) $(CO.BZ) \
+	$(LIV-PHYS.DG.BZ) $(LO) \
+	$(OPDIR9)/libopint.a
+
+evol.dbz-liv019.d.x: liv01-ofiles.nnz $(O.DBZ) $(CO.BZ) $(LIV01-PHYS.BZ) \
+	liv01-ofiles.nnz lofiles oplib9
+	$(FC) $(FFLAGS) -o evol.dbz-liv019.d.x $(O.DBZ) $(CO.BZ) \
+	$(LIV01-PHYS.BZ) $(LO) \
+	$(OPDIR9)/libopint.a
+
+evol.dbz-liv019h.d.x: liv01-ofiles.nnz $(O.DBZ) $(CO.BZ) $(LIV01-PHYS.BZ) \
+	liv01-ofiles.nnz lofiles oplib9h
+	$(FC) $(FFLAGS) -o evol.dbz-liv019h.d.x $(O.DBZ) $(CO.BZ) \
+	$(LIV01-PHYS.BZ) $(LO) \
+	$(OPDIR9h)/libopint.a
+
+evol.dbz-liv0110.d.x: liv01-ofiles.nnz $(O.DBZ) $(CO.BZ) $(LIV01-PHYS.BZ) \
+	liv01-ofiles.nnz lofiles oplib10
+	$(FC) $(FFLAGS) -o evol.dbz-liv0110.d.x $(O.DBZ) $(CO.BZ) \
+	$(LIV01-PHYS.BZ) $(LO) \
+	$(OPDIR10)/libopint.a
+
+evol.dbz-liv01z9h.d.x: liv01z-ofiles.nnz $(O.DBZ) $(CO.BZ) $(LIV01Z-PHYS.BZ) \
+	liv01z-ofiles.nnz lofiles oplib9h
+	$(FC) $(FFLAGS) -o evol.dbz-liv01z9h.d.x $(O.DBZ) $(CO.BZ) \
+	$(LIV01Z-PHYS.BZ) $(LO) \
+	$(OPDIR9h)/libopint.a
+
+evol.dbz-liv059.d.x: liv05-ofiles.bz $(O.DBZ) $(CO.BZ) $(LIV05-PHYS.BZ) \
+	liv05-ofiles.bz lofiles oplib9
+	$(FC) $(FFLAGS) -o evol.dbz-liv059.d.x $(O.DBZ) $(CO.BZ) \
+	$(LIV05-PHYS.BZ) $(LO) \
+	$(OPDIR9)/libopint.a
+
+evol.dbz-liv059h.d.x: liv05-ofiles.bz $(O.DBZ) $(CO.BZ) $(LIV05-PHYS.BZ) \
+	liv05-ofiles.bz lofiles oplib9h
+	$(FC) $(FFLAGS) -o evol.dbz-liv059h.d.x $(O.DBZ) $(CO.BZ) \
+	$(LIV05-PHYS.BZ) $(LO) \
+	$(OPDIR9h)/libopint.a
+
+
+evol.dcz-liv9.d.x: liv-ofiles.nnz $(O.DCZ) $(CO.CZ) $(LIV-PHYS.BZ) \
+	liv-ofiles.nnz lofiles.c oplib9
+	$(FC) $(FFLAGS) -o evol.dcz-liv9.d.x $(O.DCZ) $(CO.CZ) \
+	$(LIV-PHYS.BZ) $(LO.C) \
+	$(OPDIR9)/libopint.a
+
+evol.dcz-liv11.d.x: liv-ofiles.nnz $(O.DCZ) $(CO.CZ) $(LIV-PHYS.BZ) \
+	liv-ofiles.nnz lofiles.c oplib11
+	$(FC) $(FFLAGS) -o evol.dcz-liv11.d.x $(O.DCZ) $(CO.CZ) \
+	$(LIV-PHYS.BZ) $(LO.C) \
+	$(OPDIR11)/libopint.a
+
+evol.dcz-liv019.d.x: liv01-ofiles.nnz $(O.DCZ) $(CO.CZ) $(LIV01-PHYS.BZ) \
+	liv01-ofiles.nnz lofiles.c oplib9
+	$(FC) $(FFLAGS) -o evol.dcz-liv019.d.x $(O.DCZ) $(CO.CZ) \
+	$(LIV01-PHYS.BZ) $(LO.C) \
+	$(OPDIR9)/libopint.a
+
+evol.dcz-liv019h.d.x: liv01-ofiles.nnz $(O.DCZ) $(CO.CZ) $(LIV01-PHYS.BZ) \
+	liv01-ofiles.nnz lofiles.c oplib9h
+	$(FC) $(FFLAGS) -o evol.dcz-liv019h.d.x $(O.DCZ) $(CO.CZ) \
+	$(LIV01-PHYS.BZ) $(LO.C) \
+	$(OPDIR9h)/libopint.a
+
+evol.dcz-liv059.d.x: liv05-ofiles.bz $(O.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) \
+	liv05-ofiles.bz lofiles.c oplib9
+	$(FC) $(FFLAGS) -o evol.dcz-liv059.d.x $(O.DCZ) $(CO.CZ) \
+	$(LIV05-PHYS.BZ) $(LO.C) \
+	$(OPDIR9)/libopint.a
+
+evol.dcz-liv0111.d.x: liv01-ofiles.nnz $(O.DCZ) $(CO.CZ) $(LIV01-PHYS.BZ) \
+	liv01-ofiles.nnz lofiles.c oplib9h
+	$(FC) $(FFLAGS) -o evol.dcz-liv0111.d.x $(O.DCZ) $(CO.CZ) \
+	$(LIV01-PHYS.BZ) $(LO.C) \
+	$(OPDIR11)/libopint.a
+
+evol.dcz-liv0511.d.x: liv05-ofiles.bz $(O.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) \
+	liv05-ofiles.bz lofiles.c oplib11
+	$(FC) $(FFLAGS) -o evol.dcz-liv0511.d.x $(O.DCZ) $(CO.CZ) \
+	$(LIV05-PHYS.BZ) $(LO.C) \
+	$(OPDIR11)/libopint.a
+
+evol.cb9z.d.x: $(O.BZ) $(CO.BZ) $(CEFF-PHYS.BZ) lofiles oplib9 ceff-ofiles
+	$(FC) $(FFLAGS) -o evol.cb9z.d.x $(O.BZ) $(CO.BZ) $(CEFF-PHYS.BZ) \
+	$(LO) $(OPDIR9)/libopint.a
+
+evol.cdb9z.d.x: $(O.DBZ) $(CO.BZ) $(CEFF-PHYS.BZ) \
+	ceff-ofiles lofiles oplib9
+	$(FC) $(FFLAGS) -o evol.cdb9z.d.x $(O.DBZ) $(CO.BZ) \
+	$(CEFF-PHYS.BZ) $(LO) \
+	$(OPDIR9)/libopint.a
+
+adi.capz.d.x: $(ADI_OP.CZ) lofiles auxprg adi
+	$(FC) $(FFLAGS) -o adi.capz.d.x $(ADI_OP.CZ) \
+	$(LO) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) 
+
+all: evol.b9z.d.x evol.b10z.d.x evol.c9z.d.x evol.c11z.d.x evol.bz-liv019.d.x \
+	evol.db9z.d.x \
+	evol.dbz-liv9.d.x evol.dcz-liv9.d.x evol.dbz-liv9.dg.d.x \
+	evol.dbz-liv019.d.x evol.dcz-liv019.d.x evol.dcz-liv019h.d.x \
+	evol.dbz-liv019h.d.x evol.dbz-liv01z9h.d.x evol.cb9z.d.x \
+	evol.dbz-liv059.d.x evol.dbz-liv059h.d.x evol.dbz-liv11.d.x \
+	evol.cdb9z.d.x evol.cp9z.d.x evol.cap9z.d.x evol.cap10z.d.x \
+	evol.cam9z.d.x evol.cam11z.d.x evol.dcap9z.d.x \
+	evol.dcz-liv0511.d.x \
+	adi.capz.d.x adi auxprg strker
+
+auxprg: rdemdl.n.d.o wremdl.n.d.o wdtmod.d.o wrtbc.d.o wdtgng.d.o \
+	rdgong.n.d.o
+	cd $(AUX) ; make all
+
+adi:
+	cd $(ADI) ; make all
+
+strker:
+	cd $(STRKER) ; make
+
+lofiles: 
+	cd $(LDIR); make $(LO)
+
+lofiles.c: 
+	cd $(LDIR); make $(LO.C)
+
+ceff-ofiles: eqstp.d.o
+	cd $(CLMDIR) ; make $(CEFF-O) 
+
+mhd-ofiles.nnz: eqstp.d.o 
+	cd $(MDIR) ; make $(MHD-O.NNZ)
+
+liv-ofiles.nnz: eqstp.d.o
+	 cd $(LIVDIR) ; make $(LIV-O.NNZ)
+
+liv01-ofiles.nnz: eqstp.d.o
+	 cd $(LIVDIR) ; make $(LIV01-O.NNZ)
+
+liv01z-ofiles.nnz: eqstp.d.o
+	 cd $(LIVDIR) ; make $(LIV01Z-O.NNZ)
+
+liv05-ofiles.bz: eqstp.d.o
+	 cd $(LIVDIR) ; make $(LIV05-O.BZ)
+
+liv-ofiles.dg.nnz: eqstp.d.o
+	 cd $(LIVDIR) ; make $(LIV-O.DG.NNZ)
+
+oplib9: 
+	cd $(OPDIR9)/.. ; make lib
+
+oplib9h: 
+	cd $(OPDIR9h)/.. ; make lib
+
+oplib10: 
+	cd $(OPDIR10)/.. ; make lib
+
+oplib11: 
+	cd $(OPDIR11)/.. ; make lib
+
+clean:
+	rm -f $(AUX)/*.o $(LDIR)/*.o $(CDIR)/*.o $(CLMDIR)/*.o $(LIVDIR)/*.o \
+	$(OPDIR9h)/*.o $(OPDIR9)/*.o $(OPDIR10)/*.o $(OPDIR9)/libopint.a \
+	$(OPDIR10)/libopint.a $(OPDIR9h)/libopint.a $(CDIR)/evol*.x
+
+#  Files depending on include file
+
+almmxc.n.d.o bciter.n.d.o bcscen.n.d.o conmix.n.d.o \
+conmxc.n.d.o engcno.n.d.o engenr.n.d.o evolbcs.n.d.o \
+evolmain.n.d.o evolrhs.n.d.o \
+he3abc.n.d.o he3abd.n.d.o incomp.n.d.o main.n.d.o mshstr.n.d.o \
+prtsol.n.d.o rsksdr.n.d.o rxhmxc.n.d.o mixcor.n.d.o scnfil.n.d.o \
+srncns-3.n.d.o \
+test-epsder.n.d.o test-incl.n.o test-rnrate.d.o \
+evolmain.dn.d.o main.dn.d.o evolrhs.dn.d.o fdrad.d.o \
+evolbcs.dn.d.o test-stescr.o \
+almmxc.nz.d.o bciter.nz.d.o bcscen.nz.d.o cmpcvc.nz.d.o conmix.nz.d.o \
+conmxc.nz.d.o evolbcs.nz.d.o evolmain.nz.d.o evolrhs.nz.d.o fdrad.nz.d.o \
+incomp.nz.d.o main.nz.d.o mixcor.nz.d.o mshstr.nz.d.o prtsol.nz.d.o \
+rxhmxc.nz.d.o difcff.dnz.d.o evolbcs.dnz.d.o evolmain.dnz.d.o evolrhs.dnz.d.o \
+incomp.dnz.d.o main.dnz.d.o stdifv.dnz.d.o: engenr.n.d.incl 
+
+#  Note separate version of incl file for routines that use
+#  sizes of arrays for gong and emdl output
+
+bciter.nnz.d.o cmpcvc.nnz.d.o engcno.nnz.d.o engenr.nnz.d.o evolbcs.dnnz.d.o \
+evolrhs.nnz.d.o evolrhs.dnnz.d.o mshstr.nnz.d.o \
+evolmain.nnz.d.o evolmain.dnnz.d.o \
+main.nnz.d.o main.dnnz.d.o difcff.dnz.d.o stdifv.dnz.d.o \
+prtsol.nnz.d.o: engenr.nnz.d.incl
+

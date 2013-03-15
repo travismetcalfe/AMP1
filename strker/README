@@ -1,0 +1,38 @@
+Programme for computing structure kernels.
+=========================================
+
+The programme was developed by Mike Thompson (see Gough & Thompson, 1991;
+`The inversion problem'.  In Solar interior and atmosphere,
+eds Cox, A. N., Livingston, W. C. & Matthews, M., p. 519 -- 561,
+Space Science Series, University of Arizona Press.) The programme
+allows computation of kernels for a wide variety of model-difference
+pairs:
+
+ 1.  Eulerian ln(c^2) and ln(rho)
+ 2.  Eulerian ln(Gamma1) and ln(rho)
+ 3.  Eulerian ln(c^2) and ln(Gamma1)
+ 4.  Eulerian ln(u) and ln(Gamma1)
+ 5.  Eulerian ln(u) and Y
+ 6.  Eulerian ln(rho) and Y
+ 7.  Eulerian ln(c) and ln(Gamma1/c)
+11.  Lagrangian ln(c^2) and ln(rho)
+12.  Lagrangian ln(Gamma1) and ln(rho)
+13.  Lagrangian ln(c^2) and ln(Gamma1)
+14.  Lagrangian ln(u) and ln(Gamma1)
+17.  Lagrangian ln(c) and ln(Gamma1/c)
+
+It requires the model on amdl form, possibly (for kernels involving the
+equation of state) thermodynamic derivatives (output from the evolution
+code on unit iddgm1 when set; files typically named dgam1...), and
+eigenfunctions on the density-scaled form, as output from the pulsation
+code with nfmode = 3.
+
+The basic use of the code is through the command
+
+run-strker <input> <output>
+
+where <input> is the file of input parameters, as usual with active lines
+indicated by ending in @. 
+
+A template input file is provided in ../bin/rin/strker.rin, and a sample
+script using this (with parameter substitution) is in ../bin/run.strker.

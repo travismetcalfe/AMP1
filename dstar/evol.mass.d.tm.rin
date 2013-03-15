@@ -1,0 +1,70 @@
+ Version based on Travis's output, but modified.
+ - ismdif set to 3 (controls diffusion coefficient at base of convective envelope)
+ - thetdf reset (controls centralization factors in finite-difference representation
+   of time derivatives)
+
+8 'ttt.l3b.prt'   @
+2 'emdl.0100.Z2.01.s.0'   
+2 'emdl.d.0100.Z1993.1001.s '   @
+3 'emdl/emdl.d.#mass.Z#z.#case.s'   @
+12 'Z.proffitt'   @
+13 '/home/travis/evolpack/opac/ghwd-v11.gn93_ax94'   @
+14 'hvabund.g91'   @
+15 'amdl/amdl.d.#mass.Z#z.#case.s'   @
+16 '0'   @
+17 'gong/gong.d.#mass.Z#z.#case.s'   @
+18 'gong/gsum.d.#mass.Z#z.#case.s'   @
+10 '0'   @
+11 'csum.d.#mass.Z#z.#case.s'   @
+19 'cusum.d.#mass.Z#z.#case.s'   @
+22 'amdl/dgamma1.d.#mass.Z#z.#case.s'   @
+67 'ttt/prt.d.#mass.Z#z.#case.s'   @
+99 'evol-file.log'   @
+-1 ''   @
+1   @
+/home/travis/evolpack/liv-eos.05/EOS2005.Z020   @
+0.02   @
+ dsn.mod.tri.eos.opa.eng.rot.dif.bcs.con.int.msh.tst.out.dgn   @
+ 0 1   @
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,   @
+,,,,,,,,,,,,,,,   @
+,,19,22,,,,,,,,,,,,,,   @
+,,67,,,,,,,,,,,,,,,,,,   @
+ 0.0100000e2 0.02032 601   Model S   @
+ .0 180  1.e15 0   @
+ 0 7 6.959900E+10 3.846000E+33 ,, 1.00E-06   @
+ 3 1 2 .7047  1 2 0 2  Model S  Liv05   @
+ 6 1 0 0 0   @
+ 1 2 1 1 1   @
+ 18 .73307800 3.5000 5.5 -12.0 .0   @
+ 8.0019 -8.0 6.0 -5.0 13 ,4,,   @
+ 0 .0 6.3019 .3001 5.0,,   @
+ 0 0 .0 1.0 2.00E-02   @
+ .2490 1 1.0 2 5.000E+07 1 6 0    Model S   @
+ ,,,,0.51537,,,,,,,,,,   @
+ ,,,,,,,,,,,,,,,,,,   @
+ ,,,,,,,,,,,,,,,,,,   @
+  1.90 .15713485 2.0     Model S, Liv05, v. 11   @
+ 12,,,,,,,,,,,,,,   @
+ 0, 2.e5   @
+ 1 0,,,2000.,,,,,,,,,,,,,,,,,,,,,,,,   @
+ismdif, nsmdif
+ 3,,,,,,,,,,   @
+thetdf:
+  , , , ,.5,1,.5, ,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,   As used by Travis
+.5000 .5000 .5000 0.5 1.000 0.5,,,,,,,,,,,,,   @
+ 81 1.0 1.0 1.00E-04 .41169819 -9.5 5   1    Model S   @
+ 1.0361 -.3134 2.44799995 -.29589999 30.0,,,,,,,,,,   @
+ 1  2   @
+ 1.00E-08 20 .3000 6 0 0 0   @
+ .5000 .5000 .5000 1.0 .5000 1.0,,,,,,,,,,,,,   @
+ 1 0   @
+ 21 .021 1.0 5.0 3.0 5. .3001   0.1   3   @
+ ,,500.,,,,,,,,,,,,,,,,,,,,,,   @
+ 1 0     std   @
+ 2.00E+12 2.00E+16 1.00E+09 .0500 .1000 100.0 1.0,,,,   @
+  0 1 0 0 0 20 0   @
+ 1 0 0 0 0   @
+ 1 0 0 0 0 0 1 0   @
+ 0 0  0   @
+ 0 0   @

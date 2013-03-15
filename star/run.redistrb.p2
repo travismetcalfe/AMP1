@@ -1,0 +1,12 @@
+#!/bin/csh
+#  driver for redistrb
+
+if($#argv == 0) then
+	echo "Usage: run.redistrb.p2 <case>.<model no.>"
+	exit(1)
+endif
+
+echo "s/#mzcase/"$1"/" > tmp$$
+sed -f tmp$$ redistrb.p2.rin > tmp1$$
+redistrb.c.d tmp1$$
+rm tmp$$ tmp1$$

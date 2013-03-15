@@ -1,0 +1,9 @@
+#!/bin/csh
+#  returns y if argument is a file name starting with / or .,
+#  "n" otherwise
+set a = `echo $1 | sed -e 's/^[\/\.]//'`
+if ($a == $1 ) then
+	echo "n"
+else
+	echo "y"
+endif

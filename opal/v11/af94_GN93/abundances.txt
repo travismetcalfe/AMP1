@@ -1,0 +1,29 @@
+Number fractions and mass fractions for the Z elements through Ni are given for GN93 below.  Heavier elements are included in the computation of the fractions, but are a very small part of the 6th decimal place.  Li, Be, B are not included due to their small abundances too.
+ 
+
+ GN93   
+Element # frac mass frac 
+c 0.245538 0.173312 
+n 0.064583 0.053177 
+o 0.513001 0.482398 
+f 0.000025 0.000028 
+ne 0.083199 0.098675 
+na 0.001480 0.001999 
+mg 0.026310 0.037590 
+al 0.002042 0.003238 
+si 0.024554 0.040536 
+p 0.000195 0.000355 
+s 0.011223 0.021154 
+cl 0.000219 0.000456 
+ar 0.002291 0.005380 
+k 0.000091 0.000210 
+ca 0.001585 0.003734 
+sc 0.000001 0.000003 
+ti 0.000072 0.000204 
+v 0.000007 0.000021 
+cr 0.000324 0.000989 
+mn 0.000170 0.000548 
+fe 0.021884 0.071831 
+co 0.000058 0.000199 
+ni 0.001148 0.003963 
+

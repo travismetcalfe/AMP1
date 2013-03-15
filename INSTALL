@@ -1,0 +1,28 @@
+============================================================
+ Brief instructions for installing and running the AMP code
+============================================================
+
+1. Copy source code repository to user home directory:
+   svn co https://proxy.subversion.ucar.edu/AMP/ ~/evolpack
+
+2. Setup makefiles for your compiler and flags:
+   cd ~/evolpack/prg
+   setups -help
+   setups
+   setenv eprgdir ~/evolpack
+   cat Makefile.stub >> Makefile
+
+3. Compile and run serial AMP test functions:
+   make testffamp
+   make testffamp1
+   cd ../testcz0
+   ../testffamp 0.26 0.77 0.65 0.56
+   cat .paramlog.001 
+   ../testffamp1 1.00 0.02 0.27 1.88 4.6e+9
+   cat .paramlog.000
+
+4. Compile and run parallel AMP code:
+   cd ../prg
+   make pikaia_amp
+   cd ../testcz0
+   mpirun ../pikaia_amp 123456

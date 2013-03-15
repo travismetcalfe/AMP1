@@ -1,0 +1,18 @@
+#!/bin/csh
+#  Set simple formatted GONG model
+
+if($#argv < 1) then
+	echo "Usage: set-fgong <mass>.Z<Z>.<case>.<model no>"
+	exit(1)
+endif
+
+
+echo "ASTEC model" > gong/head.$1
+echo -n "Date: " >> gong/head.$1
+date >> gong/head.$1
+echo "Directory: " $cwd >> gong/head.$1
+echo -n "Model file: " >> gong/head.$1
+ls -l gong/gong.$1 | sed -e 's/  */ /g' | sed -e 's/^.*jcd//' >> gong/head.$1
+
+cd gong
+form-gong.n.d $1

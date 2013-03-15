@@ -1,0 +1,145 @@
+; IDL script to read out from mshstr (obtained with idgn75 > 0) for
+; two calculations (residing in different directories),
+; to allow comparison between them
+
+; IDL Version 5.2 (IRIX mipseb)
+; Journal File for jcd@bigcat
+; Working directory: /scratch/tac/usr/jcd/emdl94/dimauro
+; Date: Tue Dec 21 09:43:19 1999
+ 
+jvar5=0l
+nn=0l
+ntime=0l
+nvar=0l
+ntimes=intarr(2000)
+jvar5s=ntimes
+nvars=ntimes
+termss=dblarr(30,2401,500)
+akss=dblarr(2401,500)
+nrd=-1
+
+openr,1,'ttt.mshstr',/f77
+while not eof(1) do begin $
+  readu,1,ntime,jvar5,nn,nvar &  nrd=nrd+1 &$
+  ntimes(nrd)=ntime & jvar5s(nrd)=jvar5 & nvars(nrd)=nvar &$
+  print,ntime,jvar5,nn,nvar &$
+  terms=dblarr(jvar5,nn) &$
+  readu,1,terms  &$
+  aks=dblarr(nn) &$
+  readu,1,aks &$
+  termss(0:jvar5-1,0:nn-1,nrd)=terms &$
+  akss(0:nn-1,nrd)=aks &$
+endwhile
+close,1
+
+termss=termss(*,0:nn-1,*)
+akss=akss(0:nn-1,*)
+
+akss=akss(*,0:nrd)
+termss=termss(*,*,0:nrd)
+ntimes=ntimes(0:nrd)
+jvar5s=jvar5s(0:nrd)
+nvars=nvars(0:nrd)
+
+dakss=akss
+for i=0,nrd do dakss(*,i)=akss(*,i)-indgen(nn)
+
+xx=reform(termss(0,*,*))
+
+jr=jvar5-nvar
+xrs=xx
+for i=0,nrd do xrs(*,i)=10.d0^(termss(jr,*,i)-termss(jr,0,i))
+jxh=jr+4
+xh=xx
+for i=0,nrd do xh(*,i)=termss(jxh,*,i)
+
+dtxh=reform(sqrt(termss(7,*,*)))
+
+itxh=dtxh
+
+for i=0,nrd do itxh(*,i)=ftrap_int(xx(*,i),dtxh(*,i))
+
+for i=0,nrd do itxh(*,i)=itxh(*,i)-itxh(nn-1,i)
+
+ixh=xh
+
+qq=10.d0^xx
+for i=0,nrd do ixh(*,i)=ftrap_int(qq(*,i),xh(*,i))
+for i=0,nrd do ixh(*,i)=ixh(*,i)-ixh(nn-1,i)
+
+xr=10.d0^(terms(jr,*)-terms(jr,0))
+qq=10.d0^terms(0,*)
+
+dxr=xr(1:nn-1)-xr(0:nn-2)
+dqq=qq(1:nn-1)-qq(0:nn-2)
+daks=aks(1:nn-1)-aks(0:nn-2)
+daksss=akss(1:nn-1,*)-akss(0:nn-2,*)
+dxx=xx(1:nn-1,*)-xx(0:nn-2,*)
+ 
+jvar51=0l
+nn1=0l
+ntime1=0l
+nvar1=0l
+ntimes1=intarr(2000)
+jvar5s1=ntimes1
+nvars1=ntimes1
+termss1=dblarr(30,2401,500)
+akss1=dblarr(2401,500)
+nrd1=-1
+
+openr,1,'../../evoltest-tma2/testcz/ttt.mshstr',/f77
+while not eof(1) do begin $
+  readu,1,ntime1,jvar51,nn1,nvar1 &  nrd1=nrd1+1 &$
+  ntimes1(nrd1)=ntime1 & jvar5s1(nrd1)=jvar51 & nvars1(nrd1)=nvar1 &$
+  print,ntime1,jvar51,nn1,nvar1 &$
+  terms1=dblarr(jvar51,nn1) &$
+  readu,1,terms1  &$
+  aks=dblarr(nn1) &$
+  readu,1,aks &$
+  termss1(0:jvar51-1,0:nn1-1,nrd1)=terms1 &$
+  akss1(0:nn1-1,nrd1)=aks &$
+endwhile
+
+termss1=termss1(*,0:nn1-1,*)
+akss1=akss1(0:nn1-1,*)
+
+akss1=akss1(*,0:nrd1)
+termss1=termss1(*,*,0:nrd1)
+ntimes1=ntimes1(0:nrd1)
+jvar5s1=jvar5s1(0:nrd1)
+nvars1=nvars1(0:nrd1)
+
+dakss1=akss1
+for i=0,nrd1 do dakss1(*,i)=akss1(*,i)-indgen(nn1)
+
+xx1=reform(termss1(0,*,*))
+
+jr1=jvar51-nvar1
+xrs1=xx1
+for i=0,nrd1 do xrs1(*,i)=10.d0^(termss1(jr1,*,i)-termss1(jr1,0,i))
+jxh1=jr1+4
+xh1=xx1
+for i=0,nrd1 do xh1(*,i)=termss1(jxh1,*,i)
+
+dtxh1=reform(sqrt(termss1(7,*,*)))
+
+itxh1=dtxh1
+
+for i=0,nrd1 do itxh1(*,i)=ftrap_int(xx1(*,i),dtxh1(*,i))
+
+for i=0,nrd1 do itxh1(*,i)=itxh1(*,i)-itxh1(nn1-1,i)
+
+ixh1=xh1
+
+qq1=10.d0^xx1
+for i=0,nrd1 do ixh1(*,i)=ftrap_int(qq1(*,i),xh1(*,i))
+for i=0,nrd1 do ixh1(*,i)=ixh1(*,i)-ixh1(nn1-1,i)
+
+xr1=10.d0^(terms1(jr1,*)-terms1(jr1,0))
+qq1=10.d0^terms1(0,*)
+
+dxr1=xr1(1:nn1-1)-xr1(0:nn1-2)
+dqq1=qq1(1:nn1-1)-qq1(0:nn1-2)
+daks=aks(1:nn1-1)-aks(0:nn1-2)
+daksss1=akss1(1:nn1-1,*)-akss1(0:nn1-2,*)
+dxx1=xx1(1:nn1-1,*)-xx1(0:nn1-2,*)

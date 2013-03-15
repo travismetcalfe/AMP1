@@ -1,0 +1,3 @@
+#!/bin/csh
+#  set abbreviated summary from a csum
+awk -f $eprgdir/bin/awk.in/set-bsum.awk $1 > b$1

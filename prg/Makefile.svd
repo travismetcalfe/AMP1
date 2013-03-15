@@ -1,0 +1,33 @@
+
+# OLC 11/16/2010 #############################################################
+
+func: runtest_oc.f $(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) lofiles.c auxprg adi oplib11
+	$(FC) $(FFLAGS) -o ../func runtest_oc.f evalmodel_oc.f \
+	mrqdata_amp.f \
+	$(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR11)/libopint.a
+
+mrqm: lmmin_oc.f $(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) lofiles.c auxprg adi oplib11
+	$(FC) $(FFLAGS) -o ../mrqm lmmin_oc.f mrqdata_amp.f \
+	mrqmin_oc.f evalmodel_oc.f singvd_oc.f \
+	$(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR11)/libopint.a
+
+grmm: gridmin_oc.f $(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) lofiles.c auxprg adi oplib11
+	$(FC) $(FFLAGS) -o ../grmm gridmin_oc.f mrqdata_amp.f \
+	mrqmin_oc.f evalmodel_oc.f singvd_oc.f \
+	$(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR11)/libopint.a
+
+
+mpi_grmm: mpi_grmm.f $(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) lofiles.c auxprg adi oplib11
+	$(FC) $(FFLAGS) -o ../mpi_grmm mpi_grmm.f \
+	gridmin_amp.f mrqdata_amp.f \
+	mrqmin_oc.f efunc_amp.f evalmodel_amp.f singvd_oc.f \
+	$(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR11)/libopint.a
+

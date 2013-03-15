@@ -1,0 +1,61 @@
+c
+c  Storage parameters for nuclear reactions and chemical abundances
+c
+c  Note: due to inconsistent use, nspcmx must not be reduced below 2.
+c
+c  icvrmx: maximum number of composition variables in common/compvr/
+c
+c  istrmx: storage parameter for mixing in convection zones.
+c  istrmxc must be .ge. max(2*krnrmx, 4*nspcmx, 2*(icvrmx - 2), 10)
+c
+c  Modified 3/12/92. Previously scratch directory was hard-coded
+c  in parameter statement
+c
+c  Modified 5/8/95, introducing nspdmx to give max. number of diffusing
+c  elements, increasing nspcmx to accomodate full CNO treatment.
+c
+c  Modified 13/8/96, increasing size of output arrays for emdl, gong
+c  output. 
+c  Note: this only affects the routines main, evolmain
+c  and prtsol. Other routines may still (for the time being)
+c  use engenr.n.d.incl.
+c
+c  Modified 16/11/98, increasing size of nrdtmd from 140 to 150
+c
+c  Modified 5/1/00, increasing nidtmd from 50 to 60, 
+c  nrdtmd from 150 to 160 and ndtgng from 60 to 70.
+c
+c  Modified 5/8/02, increasing nidtmd from 60 to 80, 
+c  
+c
+c..      character*(*) scrdir
+      character*80 scrdir
+      parameter (nnmax = 4811, natmmx=100)
+      parameter (knucst = 11, isnuc = 5, nspcmx = 6, nspdmx = 2,
+     *  idthm = 3, icvrmx = 7)
+      parameter (iywstr = 75, icvvar=11)
+      parameter (knucwg = knucst, knucq = knucst + 3, 
+     *  krnrmx = knucst + 2, ivarmx=4+nspcmx+nspdmx,
+     *  istrmx = 30)
+      parameter(ngmax = nnmax+natmmx)
+c.. Note: this should have been
+c..     *  istrmx = max(2*krnrmx, 4*nspcmx+2, 2*(icvrmx - 2), 10))
+c.. but that seems not to be allowed on linux system
+c
+c  storage parameter for output of central boundary condition
+c  quantities
+c
+      parameter(nbcprv = 12 + 5*idthm + nspcmx*(4+nspcmx))
+c
+c  storage parameters for output arrays 
+c  (increased on 13/5/92, 22/8/95, 5/1/00)
+c
+      parameter(nidtmd = 80, nrdtmd = 160, ndtgng = 70, igvrmx = 65)
+c..c
+c..c  directory for scratch output
+c..c
+c..      parameter(scrdir='/scratch/tac/tmp/jcd/evolprg/')
+c
+c  common containing scratch directory and its length
+c
+      common/cscrtc/ scrdir, lscr

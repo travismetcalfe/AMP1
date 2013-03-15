@@ -1,0 +1,64 @@
+Template input file for structure kernel code
+---------------------------------------------
+
+(Only lines ending in `@' are used for actual input)
+
+The parameters are defined by the following place holders (e.g. to be 
+replaced in a calling script):
+
+#kercase: the kernel case
+#amdldir: the directory containing amdl file and Gamma_1-derivative file
+#amdedir: the directory containing the eigenfunction file
+#model: model identifier
+#case: identifier for the frequency calculation for the given model
+
+The output file names are defined by the following place holders (also
+typically reset in the calling script)
+
+#dif: May indicate Lagrangian kernels (for differences at fixed mass)
+      Typically left blank otherwise.
+#var12: Labels first  variable pair (e.g., `c2-rho') in kernel name
+#var21: Labels second variable pair (e.g., `rho-c2') in kernel name
+
+Thus the file names are set up as
+
+Model (amdl) file:        #amdldir/amdl.#model
+Gamma_1 derivative file:  #amdldir/dgamma1.#model
+Eigenfunction file:       #amdedir/amde.#model.#case.z
+First kernel file:        #kerdir/ker#dif.#var12.#model.#case
+Second kernel file:       #kerdir/ker#dif.#var21.#model.#case
+
+Of course, the file names etc. can also be changed by hand.
+
+------------------------------------------------------------------------------
+e-functions input as single (1) or double (2) precision
+2           @
+lmin lmax lstep
+0 10000 1      @
+icase:
+         1.  Eulerian ln(c^2) and ln(rho)
+         2.  Eulerian ln(Gamma1) and ln(rho)
+         3.  Eulerian ln(c^2) and ln(Gamma1)
+         4.  Eulerian ln(u) and ln(Gamma1)
+         5.  Eulerian ln(u) and Y
+         6.  Eulerian ln(rho) and Y
+         7.  Eulerian ln(c) and ln(Gamma1/c)
+        11.  Lagrangian ln(c^2) and ln(rho)
+        12.  Lagrangian ln(Gamma1) and ln(rho)
+        13.  Lagrangian ln(c^2) and ln(Gamma1)
+        14.  Lagrangian ln(u) and ln(Gamma1)
+        17.  Lagrangian ln(c) and ln(Gamma1/c)
+#kercase          @
+rmax
+-1.0  @
+unit 14  -  e-functions file
+unit 10  -  model file
+unit 11  -  file for output of first kernels in pair
+unit 12  -  file for output of second kernels in pair
+unit  9  -  file of Gamma_1 derivatives
+10 '#amdldir/amdl.#model'             @
+14 '#amdedir/amde.#model.#case.z'                 @
+11 '#kerdir/ker#dif.#var12.#model.#case'        @
+12 '#kerdir/ker#dif.#var21.#model.#case'        @
+9  '#amdldir/dgamma1.#model'             @
+-1 ''

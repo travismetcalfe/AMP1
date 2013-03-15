@@ -1,0 +1,12 @@
+Controls of unit numbers:
+========================
+
+Hardcoded numbers:
+
+Reserve units 51 - 59 for hardcoded diagnostics units.
+
+Currently the following are used:
+
+51: Diagnostics from s/r shtint (before 7/7/05 unit 69 was used)
+
+52, 53: Diagnostics from s/r varfrq (before 7/7/05 units 77, 78 were used).

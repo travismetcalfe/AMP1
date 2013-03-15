@@ -1,0 +1,387 @@
+  A brief and partial guide to the use of the package
+  ===================================================
+	            (Version of 16/2/06)
+
+***************************************************************************
+
+REVISIONS, relative to version of 20/7/05 (erroneously labelled 20/5/05):
+-------------------------------------------------------------------------
+
+The most significant revision is the addition of the calculation of
+rotational splittings, returned in common/cobs_param/ with the
+other oscillation parameters.
+
+**** NOTE: As a result the first dimension of obs_st has been increased
+     from 4 to 10. This should allow room for any future additions
+     (such as higher-order rotation effects).
+
+The input files for the test package are now up to include the effects
+of slow rotation (input group `rot' in evol.cp.rin; setting velrot = 0
+will suppress the effect of rotation on evolution while maintaining
+the computation of beta for the modes).
+
+- 16/2/06: The package has been updated to include a programme to compute
+  oscillations, including rotational effects, for a given model (provided
+  as an amdl file). This is driven by the main programme in
+  main_adi.capz.d.f, and a sample executable is in adi.capz.d.x (both
+  in the directory prg). See Section 7.2 below for details.
+  As part of this various minor problems and inconsistencies in the
+  pulsation part of the package, related to the transfer of models
+  from the evolution part, were corrected.
+
+***************************************************************************
+
+For now, a test programme is set up in evol.cap9z.d.x. This uses relatively
+simple physics (in particular EFF equation of state and no diffusion and
+settling), but at least provides a verification of the basic package.
+Adding more realistic physics should be relatively straightforward.
+
+The driving programme for the test is in prg/main.capz.d.f. This contains
+various initializations (discussed in more detail below), the setting up
+of a grid (only in mass, so far) of trial ZAMS models and subsequently
+calculation of models for specified masses and ages. The code is run 
+with the command run.package in the testcz directory. It should only
+be regarded as a simple example of the use of the package but
+may obviously also be used as a starting point for more sophisticated use.
+
+It should be noted that the package is still under development and hence
+is likely to change, although the basic aspects of calling the relevant
+routines and the transfer (internal or to file) of results should
+be relatively stable by now.
+
+2. Structure of the package
+---------------------------
+
+The package combines three formerly separate programmes:
+
+- Evolution code for calculating evolution sequence and setting up
+  variables for the oscillation calculation on the spatial mesh used
+  in the evolution calculation.
+
+- Code for redistributing the mesh to be appropriate for oscillation 
+  calculation.
+
+- Adiabatic pulsation code.
+
+These are now included in the package as separate subroutine calls,
+and generally with internal passing of parameters and results. However,
+the input of the basic control parameters to each part of the package
+has been retained as file input, formerly from standard input (unit 5).
+Selected parameters may be reset after the initial input, as the
+package is run. These are set in
+
+      common/cvr_param/ ....
+      common/cvi_param  ....
+
+for the evolution part and
+
+      common/cadr_param/ ...
+      common/cadi_param/ ...
+
+In all cases the variables in the common have names of the form par_xxxxx
+or ipar_kkkkk where xxxxx or kkkkk are the corresponding variable names
+for the parameters in the bulk of the programme (as documented in the
+source code in, for example, prg/evolmain.cz.d.f and adi/adipls.c.d.f,
+or in the notes on the pulsation package). Resetting the parameters in
+the common before calling the relevant subroutines resets the parameter
+values, from those originally read in.
+
+Note that the detailed structure of these common blocks is likely to
+change as it is discovered that more parameters need to be available
+for resetting.
+
+The file output is largely modelled on the earlier versions of the 
+separate codes and is documented below. File names are defined in
+the separate input files.
+
+The internal passing of results is largely done through common blocks.
+Of most general interest are the global model results and the
+oscillation results.
+
+The model results are returned in
+
+      common /csum_param/ icsum, nstep, csum_st(icsum_max, nstep_max)
+
+and
+
+      common /csum_indiv/ icsum_ind, nstep_ind,
+     *  csum_ind(icsum_max, nstep_max)
+
+The former is used for results from an evolution sequence and the latter
+when model(s) are read in from file and set up for oscillation calculations.
+The structure is otherwise the same:
+
+- icsum: defines number of variables from each model (typically time step)
+- nstep: defines number of models (number of time steps for an evolution
+	 sequence).
+
+- csum_st(i,n), i = 1, ..., icsum: corresponds to the variables output in
+	 the 'csum' file from a normal evolution run. They are implicitly
+	 documented in the subroutine dump_csum (prg/dump_csum.cz.d.f)
+	 which produces a file with the same structure as a csum file
+	 directly output, and in addition a file corresponding to a 
+	 bcsum file, based on the variables in common /csum_param/.
+	 [A later update may be to add a flag to chose instead output from
+	 common /csum_indiv/.]
+	 A few useful quantities are:
+
+	 o csum_st(1,.): M/Msun
+	 o csum_st(2,.): Age (years)
+	 o csum_st(3,.): T_eff
+	 o csum_st(4,.): L (cgs units)
+	 o csum_st(8,.): X_c (central hydrogen abundance)
+
+The maximum sizes icsum_max and nstep_max are set in the include file
+prg/engenr.cz.d.incl.
+
+The oscillation results (for a single model) are returned in
+
+      common/cobs_param/ icobs_st, nobs_st, obs_st(10,1)
+
+Here icobs_st flags for types of oscillation quantities stored in
+obs_st. It has the form icobs_st = icobs_st0 + 10*icsobs_st1.
+Here icobs_st0 flags for the way in which the frequency is calculated,
+as defined by the input parameters to the pulsation part of the 
+package (Richardson, variational, eigenfrequency, ...);
+icobs_st1 > 0 is used to flag for the inclusion of rotational effects.
+Finally nobs_st is the number of modes calculated. The following quantities
+in obs_st(i,n), n = 1, ...., nobs_st are always included
+
+- obs_st(1,.): degree
+- obs_st(2,.): radial order
+- obs_st(3,.): cyclic frequency nu (in microHz)
+- obs_st(4,*): mode inertia.
+
+If icobs_st1 = 1 (the only case so far considered) 
+
+- obs_st(5,*): rotational beta
+- obs_st(6,*): rotational splitting
+
+(see below on the treatment of rotation).
+
+The subroutine dump_obs (in adi/dump_obs.c.d.f) can be used to write
+out the results in the form of an 'obs' file, as produced from
+the stand-alone oscillation package, but possibly including in addition
+rotational results.
+
+3. Trial models
+---------------
+
+As set up in prg/main.capz.d.f a grid of trial models is set up in the
+initial call. For this a trial model must be specified in the input
+file to the evolution code (in_evol, see below). The trial set is set
+up with 
+
+      call trial_grid(amtg1, amtg2, damtg, tmass, icase, header_par)
+
+where amtg1 and amtg2 are the smallest and largest masses in the grid,
+damtg is the step in mass and tmass is the mass of the trial model read
+in to start the grid. Also, icase is a general case number which
+flags for other parameters, and header_par is a file header used in output
+of the parameters to file.
+
+The call
+
+      call test_grid(icase, itrial_err)
+
+tests for the presence of an appropriate grid of trial models, for the
+given icase, and reads in the catalogue if found. If no catalogue is
+found, itrial_err is returned as < 0.
+
+[The setup of trial grid should be extended to give also the option
+for a grid in Z, and the option of using a grid that has a different
+icase, if suitable].
+
+4. Setups for the package
+-------------------------
+
+The call
+
+      call setups_package(in_evol, in_rdist, in_adi, ierr_param)
+
+sets up basic parameters of the package and input the initial parameters
+for the different components; if an error is encountered, ierr_param
+is return as < 0.
+
+Here in_evol, in_rdist and in_adi must be
+file names for the input files for the evolution, mesh distribution
+and oscillation packages, assumed already to be stripped of
+comment lines. (Unit 21 is used for temporary input of in place
+of standard input for reading the parameters.)
+
+The input of parameters generally follows usage in the stand-alone versions
+of the code. However, the file names are defined in the input files only
+as file headers. Thus, for example, if unit idsevl (default 3) is specified
+as 
+
+3 'emdl/emdl'
+
+in in_evol, the output file for mass 1.43 solar mass, Z = 0.015 and
+icase = 10 would be 
+
+  emdl/emdl.0143.Z1500.0010.s
+
+In some cases, such as the gong and amdl files, specifying the file
+header as '0' will block for this type of output.
+
+In the evolution part, standard print (istdpr) is reset in in_evol
+to istdpr_in (set as 67 in the example provided in testcz/evol.cp.rin). 
+This is set as a file header in in_evol as
+
+67 'ttt/prt'
+
+resulting in individual output files for each mass and Z. This
+produces fairly voluminous output, mainly for diagnostic purposes.
+[The code should eventually be modified such that istdpr_in = 0
+blocks for this output].
+
+Similarly, in the oscillation package, istdpr is reset in the input file
+(to 39 in the example provided, in testcz/adipls.cp.in), and the file
+header is defined by
+
+39 'ttt/ttt.adipls.prt'
+
+Output is also produced on unit istdou. This is generally left as
+standard output and piped to a file in the run scripts. Here error
+and warning messages are produced, as well as brief output to indicate
+the progress of the calculation.
+
+5. Computation of models and frequencies
+----------------------------------------
+
+The driving subroutine for the computational part of the package is
+called with
+
+      call set_modage(am_new, z_new, icase, xmod_new, age_new,
+     *  interpol, nt_max, age_max, newseq, ierr_param)
+
+This can be used both to set up an evolution sequence and to set up
+an individual model, with oscillation frequencies. On error, it returns
+with ierr_param < 0. [Later the flag should be defined to indicate more
+precisely in which overall part of the package the error occurred.]
+
+The input parameters are:
+
+- am_new:   mass of model (sequence)
+- z_new:    heavy-element abundance
+- icase:    case number (used for output files)
+- xmod_new: Model number (possibly non-integer) of model to extract
+  from sequence. (See below.)
+- age_new:  Age (in years) of model to extract from sequence. (See below)
+- interpol: If interpol = 1, interpolate linearly in model sequence when
+  setting model of age age_new. Otherwise model in sequence closest in
+  age is selected.
+- nt_max, age_max: If nt_max > 0 run evolution sequence for nt_max steps.
+  Otherwise, if age_max > 0 run sequence until first model older than
+  age_max. If neither of these conditions is satisfied, determine required
+  number of steps based on xmod_new or age_new (see below).
+- newseq:   If newseq .ne. 0, force calculation of new evolution sequence,
+  regardless of other parameters.
+
+The typical usage would be to extract a model with given characteristics
+from a model sequence, possibly first computing the sequence. The location
+of the model in the sequence is specified by xmod_new or age_new such
+that xmod_new has preference: only if xmod_new < 0 is age_new used.
+A non-integer xmod_new flags for linear interpolation in the model
+sequence to determine the appropriate models. (For example, xmod_new = 11.25
+indicates a model a quarter of the way from model no 11 to model no 12.)
+This is indicated by a fractional trailer in the output file, such as
+
+  gong.0125.Z2000.0010.11.250
+
+Interpolation is carried put by first setting the two relevant models
+(models no 11 and 12 in the example above) on the same mesh, chosen
+as the mesh in the model closest to the target, using four-point
+Lagrangian interpolation. Then linear interpolation is carried out
+between these two models. Special care is taken in cases where both
+models have a discontinuity in composition (resulting from a growing
+convective core or a very deep growing convective envelope).
+
+If a model with a given age is specified, and interpol = 1, the code similarly
+interpolates to the appropriate non-integer model number.
+
+Typically, in a call of set_modage it is checked whether an appropriate
+evolution sequence is already available, of sufficient length. This
+is determined by the csum data set in common /csum_param/ and is 
+assumed to correspond to the file available on idsevl. (This would be
+the case after a preceding call of set_modage.) If this is the case,
+and newseq .ne. 1, the call only extracts the specified model. If not,
+or if newseq = 1, a new evolution sequence is computed before the
+specified model is extracted.
+
+When called with age_new < 0 and xmod_new < 0, the call only sets the
+specified evolution sequence.
+
+6. Treatment of rotation
+------------------------
+
+The evolution code contains the option of including the spherically
+symmetric part of the effect of the centrifugal force on hydrostatic
+equilibrium. So far only constant angular velocity is allowed, changing
+with evolution to maintain the integrated angular momentum. This is
+flagged including group `rot' in the input parameters in evol.cp.rin,
+setting isprot = 1 and setting velrot appropriately. These quantities
+can also be passed in ipar_isprot and par_velrot.
+
+The oscillation code includes the option of computing kernels for
+a spherical angular velocity Omega(r), as well as computing splittings
+for the rotation profile resulting from the evolution calculation.
+In this case the rotational splitting has the form
+
+  nu_nlm = nu_nl0 + m delta nu_nl
+
+where
+
+  delta nu_nl = beta_nl int K_nl(r) Omega(r) d r
+
+and the kernel K_nl is unimodular. Thus for constant rotation the splitting
+is simply delta nu_nl = beta_nl Omega. Computation of the splitting is
+flagged by setting irotkr = 11 in the file with input parameters
+to the pulsation part of the code; this can also be passed in ipara_irotkr.
+The results are returned in obs_st(5,.) = beta_nl and obs_st(6,.) = delta nu_nl.
+If no rotation rate has been set in the evolution part, beta is still
+calculated and delta nu is set to zero.
+
+7. Sample executables and scripts
+---------------------------------
+
+The executables are set up in prg, as controlled by the Makefile.
+This may obviously be used for user additions or modifications to the
+package.
+
+The sample scripts (with input files and output) are so far provided in
+the directory testcz. 
+
+7.1 Computation of evolution models and oscillations
+
+The script run.package in testcz provides an example of the running
+of evol.cap9z.d.x. It uses as input template package.rin and in addition
+uses templates for the input files for the separate components
+(evol.cp.rin, redistrb.cp.in and adipls.cp.in). After the initial setups
+the script runs through a sequence of examples of model calculations
+designed to test and display some of the options.
+
+7.2 Computation of frequencies for a given model
+
+The script run.adipack in testcz provides an example of computing
+frequencies and rotational splittings for a given model (given as
+an amdl file), including the redistribution of the mesh.
+It uses as input template adipack.rin and in addition
+uses templates for the input files for the separate components
+(redistrb.cp.in and adipls.cp.in). As now set up, the script has
+as input the file name of the amdl file. Output is provided to an obs
+file with a name derived from the model input file name by replacing 
+a possible directory name `amdl/' by `osc/' and then replacing 
+`amdl' by `obsr'. If the model file name does not contain `amdl',
+the output file is named `osc/obsr.no_name' (the agsm output is also
+given the trailer `no_name'). This is controlled by the driving
+main programme in main_adi.capz.d.f and is easily changed, in fact.
+
+The angular velocity is defined by a call of the routine set_rotation, 
+the source of which is in adi/set_rotation.c.d.f. It is called from
+the main programme of the package. This routine is intended to be modified 
+by the user, if required. The present version reads in from standard input
+the file name of a file containing a radial mesh and angular velocity,
+reads in the angular velocity from this file and interpolates it to
+the mesh used in the pulsation calculation. The file name is included
+at the end of the parameter file adipack.rin. 

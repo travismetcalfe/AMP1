@@ -1,0 +1,13 @@
+#!/bin/csh
+#  driver for adipls
+
+if($#argv == 0) then
+	echo "Usage: run.adipls <case>.<model no.>.<msh>"
+	echo "where <msh> is, e.g., p2"
+	exit(1)
+endif
+
+echo "s/#mzcasep/"$1"/" > tmp$$
+sed -f tmp$$ adipls.rin > tmp1$$
+run-adipls.c tmp1$$ > ttt/ttt.adipls.$1
+rm tmp$$ tmp1$$

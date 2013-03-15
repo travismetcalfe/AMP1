@@ -1,0 +1,53 @@
+#!/bin/csh
+#  driver for for evolution programme, varying mass
+#  usage: 
+
+if($#argv == 0) then
+  echo "Usage:"
+  echo "run-evol.mass <mass> <100 Z> <case> <model no>"
+  exit(1)
+endif
+
+set sdir = ./ttt
+
+if(-d ttt) then
+else
+	echo "Making ttt"
+	mkdir ttt
+endif
+
+if(-d log) then
+else
+	echo "Making log"
+	mkdir log
+endif
+
+if(-d gong) then
+else
+	echo "Making gong"
+	mkdir gong
+endif
+
+if(-d osc) then
+else
+	echo "Making osc"
+	mkdir osc
+endif
+
+set iqfit = "5"
+
+echo "s/#mass/"$1"/" > tmp$$
+echo "s/#z/"$2"/" >> tmp$$
+echo "s/#case/"$3"/" >> tmp$$
+echo "s/#iqfit/"$iqfit"/" >> tmp$$
+echo "s/#nmdtrl/"$4"/" >> tmp$$
+echo "s?#evolfile?evol-file"$$".log?" >> tmp$$
+sed -f tmp$$ evol.mass.stg.rin > tmp1$$
+#run-evol -b10z tmp1$$ $sdir/ttt.evol.mass.$1.Z$2$3.$4 run-evol$$.log
+run-evol -dcliv0511z tmp1$$ $sdir/ttt.evol.mass.$1.Z$2$3.$4 run-evol$$.log
+
+cat run-evol$$.log evol-file$$.log > log/log.$1.Z$2.$3.$4
+
+rm run-evol$$.log evol-file$$.log 
+
+rm tmp$$ tmp1$$

@@ -1,0 +1,210 @@
+#!/bin/csh
+#  Script to edit various templates
+#  Usage: setups [-help] [-B] [-C <compiler>] [-P <prec>] 
+#                [-F <Fortran flags ....]
+#  where <compiler> defines the Fortran compiler to be used
+#  (default f77)
+
+set FC = "f77"
+
+set FF = "-O2"
+
+set PRC = "sngl"
+
+set endian = "little_endian"
+
+while($#argv > 0)
+  switch($1)
+  case -help:
+	echo "Usage: setups [-help] [-B] [-P prec] [-C <compiler>] \"
+	echo "       [-F <Fortran flags ....>]"
+	echo "-B: flags for binary files on big endian form"
+	echo "    (default little endian)"
+	echo "-P <prec>: sets precision in opacity package."
+	echo "   <prec> = sngl: single precision internal tables"
+	echo "   <prec> = dble: double precision internal tables"
+	echo "   Default: <prec> = " $PRC
+	echo "Note: the Fortran flags must appear at the end."
+	echo "Default compiler: " $FC
+	echo "Default flags:    " $FF
+	echo "Compiler options: e.g. f77, pgf77"
+	exit(1)
+  case -B:
+	set endian = "big_endian"
+	shift 
+	breaksw
+  case -C:
+	shift 
+	set FC = $1
+	shift
+	breaksw
+  case -P:
+	shift 
+	set PRC = $1
+	shift
+	breaksw
+  case -F:
+	shift 
+	set FF = ""
+	while($#argv > 0)
+	  set FF = ($FF $1)
+	  shift
+        end
+	breaksw
+  default:
+	shift
+	breaksw
+  endsw
+end
+
+if($?FF) then
+	set FFLAGS = ($FF)
+else
+	switch($FC)
+	  case f77:
+	  case g77:
+		set FFLAGS = "-O2"
+#  Note Guenter uses
+#  FFLAGS = -O2 -malign-double -ffast-math -fno-f2c
+#  in this case.
+		breaksw
+	  case pgf77:
+		set FFLAGS = "-O2"
+		breaksw
+	  default:
+		set FFLAGS = "-O2"
+		breaksw
+	endsw
+endif
+
+#echo FC: $FC
+#echo FFLAGS: $FFLAGS
+#exit(1)
+
+set dir = `chdir ..; echo $cwd`
+
+cd ..
+
+touch `find . -name '*.rf' -print`
+
+set n_make = `find . -name 'tem_Makefile' -print | wc -l`
+
+if($n_make > 0) then
+
+  echo "s?#tem#JCD#tem#?"$dir"?" > tmp_sed$$
+  echo "s?#tem#FC#tem#?"$FC"?" >> tmp_sed$$
+  echo "s?#tem#FFLAGS#tem#?"$FFLAGS"?" >> tmp_sed$$
+  echo "s?^#"$PRC"#??" >> tmp_sed$$
+  cat tmp_sed$$
+
+  grep -l '#tem#FC#tem#' `find . -name 'tem_Makefile' -print` > tmp_list$$
+  grep -l '#sngl#' `find . -name 'tem_Makefile' -print` >> tmp_list$$
+
+  foreach f (`cat tmp_list$$`)
+    set newf = `echo $f | sed -e 's/tem_//'`
+    echo "Resetting" $newf
+    sed -f tmp_sed$$ $f > $newf
+    rm -f $f
+  end
+  
+  rm tmp_sed$$
+
+else
+  echo "No Makefiles to reset"
+endif
+
+cd opac
+
+set n_opac = `find . -name 'tem_*' -print | wc -l`
+
+if($n_opac > 0) then
+  echo "s?#tem#DIR#tem#?"$dir"?" > tmp_sed$$
+  echo "s?#endian?"$endian"?" >> tmp_sed$$
+  foreach f (tem*)
+    set newf = `echo $f | sed -e 's/tem_//'`
+    echo "Reset $newf"
+    sed -f tmp_sed$$ $f > $newf
+  end
+  rm -f tem_*
+  rm -f tmp_sed$$
+
+else
+  echo "No opac files to reset"
+endif
+
+
+
+
+cd ../bin
+
+if(-f tem_run-evol) then
+
+  echo "Resetting run-evol"
+  echo "s?#tem#DIR#tem#?"$dir"?" > tmp_sed$$
+
+  sed -f tmp_sed$$ tem_run-evol > run-evol
+  chmod a+x run-evol
+
+  rm -f tem_run-evol
+
+  rm -f tmp_sed$$
+
+endif
+
+cd ..
+set n_rin = `find . -name 'tem_*rin' -print | wc -l`
+
+if($n_rin > 0) then
+
+  echo "s?#tem#DIR#tem#?"$dir"?" > tmp_sed$$
+
+  foreach f (`find . -name 'tem_*rin' -print`)
+    set newf = `echo $f | sed -e 's/tem_//'`
+    echo "Resetting" $newf
+    sed -f tmp_sed$$ $f > $newf
+    rm -f $f
+  end
+  
+  rm tmp_sed$$
+
+else
+  echo "No rin files to reset"
+endif
+
+find . -name 'emdl*' -print | grep $endian > tmp_find$$
+sed -e 's/emdl.*//' tmp_find$$ > tmp_dir$$
+cat tmp_dir$$
+set oldwd = $cwd
+foreach f(`cat tmp_dir$$`) 
+  cd $f
+  cp -p emdl* ..
+  echo "Moving from " $f ":" emdl*
+  cd $oldwd
+end
+
+rm tmp_find$$
+rm tmp_dir$$
+
+
+if($endian == "big_endian") then
+  ln -s ../testcz_prototype/emdl.BE ../testcz_prototype/emdl
+  ln -s ../testcz_prototype/emdl.rho.0100.Z2.01.s.0.BE ../testcz_prototype/emdl.rho.0100.Z2.01.s.0
+  rm -rf ../testcz_prototype/emdl.LE ../testcz_prototype/emdl.rho.0100.Z2.01.s.0.LE
+else
+  ln -s ../testcz_prototype/emdl.LE ../testcz_prototype/emdl
+  ln -s ../testcz_prototype/emdl.rho.0100.Z2.01.s.0.LE ../testcz_prototype/emdl.rho.0100.Z2.01.s.0
+  rm -rf ../testcz_prototype/emdl.BE ../testcz_prototype/emdl.rho.0100.Z2.01.s.0.BE
+endif  
+
+
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo ""
+echo "Add " $dir/bin "to command search path"
+echo ""
+echo "Add " $dir/idl_pro "to IDL_PATH"
+echo ""
+echo "Add " 
+echo "setenv eprgdir $dir " 
+echo "to .cshrc file" 
+echo ""
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++"

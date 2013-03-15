@@ -1,0 +1,483 @@
+\input rep12
+\input easyng
+\input ruled
+\input btxmac
+\nopagenumbers
+\maketoc
+
+\centerline{\largebf Notes on Opacity-Interpolationroutine OPINT 
+                     (v11, 05/03/2006)}
+
+\subsectionskip
+\section{1. Introduction}
+This package interpolates opacities in $\rho$,$T$,$X$ and $Z$ ($\rho$ = density,
+$T$ = temperature, $X$ = hydrogen mass fraction, $Z$ = heavy elements mass fraction).
+In this package the latest OPAL-tables~\cite{rog95} are used.
+One can choose between two interpolation algorithms.
+The first algorithm (minimum norm) uses a C$^1$ interpolant defined in 
+piecewise fashion
+over triangles in the $\rho--T$ plane~\cite{acm677}~\cite{niel83}.
+The global interpolant is constucted by a nine paramter version of a
+finite interpolation scheme introduced by Nielson~\cite{niel80}.
+The second algorithm uses birational splines and is implemented
+according to Helmuth Spath~\cite{Spa91}.
+Interpolation in $X$ and $Z$ is performed using Akima's univariate interpolation
+scheme~\cite{acm433,acm697}.
+For the low-temperature opacites, tables from 
+Alexander \& Ferguson (1994, ApJ 437, 879) [AF94] and from
+Alexander \& Ferguson (2005, ApJ 623, 585) [AF05] are available.
+
+Electron conduction (EC) according to Itoh et al. (1983, ApJ 273, 774) can be 
+enabled for all tables. EC could be important in more massive stars.
+If EC is enabled, the EC becomes effective (i.e. it
+is 'switched' on) if the EC contribution modifies the resulting opcacity
+by $\ge 10^{-5}$. This treshold can be changed in the code (dopints.f,
+dopintc.f, dopintf.f) by changing the currently defined parameter {\bf econ=5.0d0}
+to any other value.
+\medskip
+\section{2. Installation}
+\vskip-2mm
+\subsection{2.1 Using the provided opacity tables}
+\vskip-2mm
+The following five tables are provided for 'little\_endian' machines (such as 
+machines with intel processors; to generate tables for `big\_endian' machines 
+see Section~2.2; for the opacity table 1), given below, also
+`big\_endian' binary files are provided):
+\bigskip
+{\small
+%\TightTables
+\LeftJustifyTables
+\ruledtable
+ Opacity table  |Abundance      |       Description\cr
+1) OPAL95+AF94  |GN93           | \parasize=7.2cm
+                                  \para{Opal (1995) tables plus Alexander-Furgenson (1994)
+                                     tables using the Grevesse-Noel (1993) abundances.}\nr
+2) OPAL95+AF05  |GN93           | \parasize=7.2cm
+                                  \para{Opal (1995) tables plus Alexander-Furgenson (2005)
+                                     tables using the Grevesse-Noel (1993) abundances.}\nr
+3) OPAL95+AF05  |AGS05          | \parasize=7.2cm
+                                  \para{Opal (1995) tables plus Alexander-Furgenson (1994)
+                                     tables using the Asplund-Grevesse-Sauval (2005)
+                                     abundances.}\nr 
+4) OPAL95+AF05  |AGS05pNe45Ar40 | \parasize=7.2cm
+                                  \para{As table 3), but with Neon enhanced by 0.45 dex and
+                                     Argon by 0.40 dex.}\nr
+5) OPAL95+AF05  |AGS05pNe40     | \parasize=7.2cm
+                                  \para{As table 3), but with Neon enhanced by 0.50 dex.}
+\endruledtable
+\bigskip
+\centerline{{\bf Table 1:} Provided opacity tables}
+}%\small
+\vfill\eject
+To use any of the tables listed above, copy in the main-directory the appropriate 
+Makefile\_*, listed in the table below, to the 
+filename `Makefile', e.g.: to use table 3) 
+(OPAL95+AF05 and AGS05 abundances) say:
+\smallskip
+\line{\quad cp Makefile\_AGS05 Makefile\hfil} 
+\bigskip
+\bigskip
+{\small
+\LeftJustifyTables
+\ruledtable
+     Table (Abundance)       |       Makefile            |  OPINTPATH          \cr
+OPAL95+AF94 (GN93)           |  Makefile\_GN93\_AF94     |  OPINTPATH\_GN93\_AF94\nr
+OPAL95+AF05 (GN93)           |  Makefile\_GN93           |  OPINTPATH\_GN93     \nr
+OPAL95+AF05 (AGS05)          |  Makefile\_AGS05          |  OPINTPATH\_AGS05    \nr
+OPAL95+AF05 (AGS05pNe45Ar40) |  Makefile\_AGS05pNe45Ar40 |  OPINTPATH\_AGS05    \nr
+OPAL95+AF05 (AGS05pNe40)     |  Makefile\_AGS05pNe50     |  OPINTPATH\_AGS05
+\endruledtable
+}%\small
+\bigskip
+\centerline{{\bf Table 2:} Provided Makefiles and OPINTPATHs}
+\bigskip
+Next modify the {\bf Makefile} with an editor (such as vi) according to your
+compiler needs, such as compiler-flages, ranlib, etc and execute the command
+\medskip
+\line{\quad make lib\hfil}
+\medskip
+which builds the library: `./lib/libopint.a'.\hfil\break
+Next copy the appropriate OPINTPATH\_* file to $<$appl\_path$>$/OPINTPATH, where
+$<$appl\_path$>$ is the directory name of your application for which you wish to
+use this interpolation package, e.g.:
+\medskip
+\line{\quad cp OPINTPATH\_AGS05 $<$appl\_path$>$/OPINTPATH\hfil}
+\medskip
+With an editor (such as vi) modify the pathes
+of the opacity tables in the file {\bf OPINTPATH}, i.e. change the pathes
+to the (e.g., absolute) installation pathes $<$inst\_path$>$ where you installed the
+opacity package, as demonstrated below in Table~3 for the OPAL95+AF05 (AGS05)
+opacity tables.
+\medskip
+{\small
+\TightTables
+\ruledtable
+Entry \#|pathes of opacity tables                                | description        \cr
+1|$<$inst\_path$>$/v11/ol95\_AGS05/little\_endian/opalxe.bin\hfill|\parasize=4.1cm
+                                                              \para{Opacity values of 
+                                                                    OPAL tables}       \cr
+2|$<$inst\_path$>$/v11/af05\_AGS04/little\_endian/af05xe.bin\hfill|\parasize=4.1cm
+                                                              \para{Opacity values of
+                                                                    Alexander-Furgenson
+                                                                    tables}       \cr
+3|$<$inst\_path$>$/v11/ol95\_AGS05/little\_endian/opalxeAF05-pd.bin\hfill|\parasize=4.1cm
+                                                              \para{Partial derivatives 
+                                                                of OPAL and 
+                                                                Alexander-Furgenson
+                                                                tables}                \cr
+4|$<$inst\_path$>$/v11/ol95\_AGS05/little\_endian/ival95.dat\hfill|\parasize=4.1cm
+                                                              \para{used for determinig
+                                                                    extrapolation domain 
+                                                                    of opacity tables}
+\endruledtable
+}%\small
+\medskip
+\centerline{{\bf Table 3:} Format of OPINTPATH defining the input filenames 
+            of the opacity tables}
+%\vfill\eject
+\bigskip
+\subsection{2.2 Installing new OPAL opacity tables}
+The package allows the use of OPAL tables of any chemical mixture (abundances) for the 
+heavy elements as provided by the OPAL Web-page:
+\medskip
+\line{\quad http://www-phys.llnl.gov/Research/OPAL/type1inp.html\hfil} 
+\medskip
+After completing the form on this Web-page and pressing the ``NORMALIZE'' button, you 
+will be asked for your name and e-mail address. You will be notified by e-mail from 
+where you can dowload the new OPAL tables, which will usually have a filename like:
+\medskip 
+\line{yyyymmdd\#\#\#\#.tab\hfil}
+\medskip 
+where `yyyymmdd' represents the date and `\#\#\#\#' is a running number (e.g. 0001). This file
+must be stored as an ASCII file (and not as an HTML file when downloaded with an internet
+browser like Netscape). The procedure to prepare this new table (actually tables) for the
+opint package is as follows:
+\itemize{1cm}
+\item{1)} go to the main directory of the opacity interpolation package.
+\item{2)} start the setup progamme
+\itemitem{\qquad} {\bf ./setup.sh}
+\item{\phantom{2}} where you will be asked for the filename (including the complete path) 
+                   of the newly downloaded opacity table 
+                   ($<$table\_path$>$/yyyymmdd\#\#\#\#.tab),
+\item{\phantom{2}} and for the binary format: `little' or `big' ENDIAN (little 
+                   is default).  The `ENDIAN' input is only used for saving 
+                   the binary tables in the subdirectory `little\_endian' or 
+                   `big\_endian' located in the directory `ol95\_$<$name$>$'
+                   (see below). One has still to define the actual binary 
+                   format by specifying the appropriate compiler option in the 
+                   Makefile (or it is determined solely by the machine 
+                   architecture, see also below).
+\item{\phantom{2}} Next you will be asked for a $<$name$>$ that will be used 
+                   to create the new directory `ol95\_$<$name$>$', where 
+                   the new tables will be copied to (e.g. $<$name$>$ could be 
+                   a string that indicates the chemical composition 
+                   (abundances), such as `AGS05pNe35').
+\item{\phantom{2}} Finally one has to choose between two (existing) 
+                   low-temperature AF05 opacity tables of different chemical 
+                   compositions: AGS04 (default) or GN93, where AGS04 is the 
+                   Asplund, Grevesse \& Noel (2004) composition and GN93 is 
+                   the Grevesse \& Noel (1993) abundances. 
+\item{3)} Edit the Makefile (compiler options, etc.) followed by
+\itemitem{} make tab
+\enditemize
+\bigskip
+Once the `make'-run has (successfully) finished, you will find the appropriate 
+OPINTPATH file for the newly generated tables in the main directory 
+of the opint package.
+
+A similar setup programme exists, {\bf ./setup\_bigendian.sh}, that allows one to 
+remake the provided opacity tables 2-5 (see Table~1 above) in 
+`big' ENDIAN format on an appropriate `big' ENDIAN machine or with appropriate 
+compiler options (e.g. `-convert big\_endian' with the Intel Fortran compiler).
+\vskip 8mm
+\section{3. Using the package}
+Three subroutines (s/r) have to be called: 1.) {\bf maceps}, 2.) {\bf opinit} 
+and 3.) {\bf opintf} or {\bf opintc} and/or {\bf opints}. The first s/r
+({\bf maceps}) evaluates the relative machine precision, 
+s/r {\bf opinit} initializes the opacity-tables i.e., it reads
+all tables into the machine's memory.  The third s/r {\bf opint$\{\bf cfs\}$} 
+is(are) the actual interpolation-routine(s) (see below).
+\bigskip
+\hrule
+\example
+\obeyspaces{
+      implicit double precision (a-h,o-z)
+c
+c     test-driver program for opacity
+c     interpolation subprograms
+c     opinit       (opacity initialisation)
+c     opintf       (opacity interpolation minimum norm)
+c     opints       (opacity interpolation rational splines)
+c
+      character*80 tabnam
+c
+      data tabnam /'OPINTPATH'/
+      data iorder /4/
+      data imode  /2/ ! initialize rat. splines \& enables EC
+c                     ! use imode /-2/ to disable EC
+c
+c     get relative machine precision
+     {\bf call maceps(eps)}
+c
+c     initialize opacity tables
+     {\bf call opinit(eps,iorder,tabnam,imode)}
+c
+
+}
+\endexample
+\bigskip
+\hrule
+\bigskip
+\centerline{{\bf Figure 1:} Example how to initialize OPINT (excerpt of doptesf.f)}
+\vskip 1cm
+The argument variable {\bf iorder} in call {\bf opinit} defines how many 
+table-points should be used
+for the univariate interpolation in the X-- and Z-- domain respectively.
+This number defines the degree of the used univariate polynomial~\cite{acm697}. 
+Interpolation in Z is performed logarithmical and linear in X.
+With iorder=4 five tables will be used for the univariate interpolation in
+Z and X and will provide the most accurate interpolant (and the most expensive
+in computation time).
+\vskip 8mm
+The initialisation subroutine {\bf opinit} has the following arguments:
+\vskip 8mm
+
+\TightTables
+\ruledtable
+argument|    type          | inp/out |  description                    \cr
+eps     | double precision | input   |\parasize=7.0cm
+                                      \para{used to evaluate certain
+                                            machine-depend tolerances;
+                                            evaluated from s/r maceps} \cr
+iorder  | integer          | input   |\parasize=7.0cm
+                                      \para{iorder+1 X and Z table-points
+                                            will be used for the univariate 
+                                            interpolation in the X and Z 
+                                            domain, respectively\hfill\break
+                                            $2\le$ iorder $\le 4$}       \cr
+tabnam  | character*(130)  | input   |\parasize=7.3cm
+                                      \para{defines the filename, which
+                                            opacity-tables should be used;
+                                            take care of the sequence 
+                                            as given below in Table 5}  \cr
+imode   | integer          | input   |\parasize=7.3cm
+                                      \para{selects algorithm(s) to be 
+                                            used;
+                                            \itemize{2.0cm}
+                                            \item{imode=0,1:} only the minimum norm
+                                            \hfill\break
+                                            algorithm will be initialized
+                                            (EC is enabled with imode=1)
+                                            \item{imode=2:} only the birational splines
+                                            are available (EC enabled)
+                                             \item{imode$>$2:} both algorithm, the
+                                            minimum norm and birational splines (+EC)
+                                            are initialized (see also Table 4)
+                                            \item{imode$\le$0:} a negative value of
+                                            the particular imode number disables
+                                            the contributions due to electron conduction
+                                            \enditemize\vskip -6mm}
+                                            
+\endruledtable
+\bigskip
+\centerline{{\bf Table 4:} argument description of routine opinit}
+%\vskip 8mm
+%\vfill\eject
+
+\bigskip
+There are three interpolation-routines available, which have to be  selected
+(initialized) properly by the argument variable {\bf imode} in the previous 
+call {\bf opinit}
+(see also Table 4):
+\bigskip
+\TightTables
+\ruledtable
+imode |      interpolation-routine     |    description                                \cr
+1     |         opintf                 |\parasize=8.3cm
+                                        \para{minimum norm fast version {\bf without} 
+                                               extrapolation-domain checking + EC}     \cr
+1     |         opintc                 |\parasize=8.3cm
+                                        \para{minimum norm version {\bf with} 
+                                              extrapolation-domain\hfill\break
+                                               checking + EC}                          \cr
+2     |         opints                 |\parasize=8.3cm
+                                        \para{birational splines {\bf with} 
+                                              extrapolation-domain checking + EC}      \cr
+$\le$0|    Disables EC                 |\parasize=8.3cm
+                                        \para{Electron conduction (EC) is 
+                                              {\bf disabled} with a negative value of the
+                                              particular imode number (e.g., imode=
+                                              \hbox{-1} initializes either opintf or opintc
+                                              and disables electron conduction}
+\endruledtable
+\bigskip
+\centerline{{\bf Table 5:} available interpolation subroutine calls}
+\bigskip
+%\vfill\eject
+The following listing is an excerpt of the programme doptesf.f:
+\bigskip
+\hrule
+\example
+\obeyspaces{
+c
+c    interpolate to get opacity value opalg
+c    iexp=0
+     ier=0
+    {\bf call opintf(x,z,tlg,rlg,opalg,opr,opt,opx,opz,iexp,ier)}
+     if(ier.gt.0)write(6,'(a,i3)')
+   +   'opint: ERROR in interpolation s/r, ier=',ier
+c    if(iexp.gt.0)print *,'nr. of extrapolated points: ',iexp
+c
+}
+\endexample
+\bigskip
+\hrule
+\bigskip
+\centerline{{\bf Figure 2:} Example how to use routine opintc}
+\vskip 5truemm
+For the extrapolation domain checking of the OPAL-tables use 
+{\bf opintc} instead of {\bf opintf} and uncomment:
+\bigskip
+\example\obeyspaces{
+c    iexp=0  
+c    if(iexp.gt.0)print *,'extrapolated points: ',iexp 
+}
+\endexample
+\vskip 8mm
+The OPAL95 tables do not provide values for the region
+7.2 $\le\log_{10}(T) \le$ 8.7 and -0.5 $\le$ $\log_{10}(R)$ $\le$ 1.0.
+This domain (here called the extrapolation domain) has been reconstructed by 
+a proper extrapolation scheme using the univariate Akima interpolation scheme.
+The argument variable {\bf iexp} indicates how many of these extrapolated
+table-points have been used in the interpolation process.
+Moreover, in this version the range of $\log_{10}(R)$ has been extended to
+$\log_{10}(R)=5$, using linear extrapolation in $\log_{10}(R)$. This will
+allow an (very) approximate estimate of the opacity for low-mass stars.
+\bigskip
+The argumentlist is the same for all three routines opintf, opintc and opints:
+\sectionskip
+
+\TightTables
+\ruledtable
+argument|    type          | inp/out |  description                        \cr
+x       | double precision | input   |\parasize=6.0cm
+                                      \para{hydrogen mass fraction X\hfill\break
+                                            $0.0\le$x$\le 0.9$}            \cr
+z       | double precision | input   |\parasize=6.0cm
+                                      \para{mass fraction of heavy elements Z
+                                            \hfill\break $0.0\le$z$\le0.1$}\cr
+tlg     | double precision | input   |\parasize=6.0cm
+                                      \para{logarithm of base 10 of temperature $T$
+                                      \hfill\break$\{3.0\} 2.70\le$tlg$\le 8.7$}\cr
+rlg     | double precision | input   |\parasize=6.0cm
+                                      \para{logarithm of base 10
+                                            $\rho \over T6^3$ ; 
+                                            $\rho = $ density;
+                                            $T6 = {T \over 10^6}$;
+                                            \qquad $-8.\le$rlg$\le 5.$
+                                           }                               \cr
+opalg   | double precision | output  |\parasize=6.0cm
+                                      \para{logarithm fo base 10 of opacity 
+                                            $\kappa$}\cr
+opr     | double precision | output  |\parasize=6.0cm
+                                      \para{partial derivative 
+                                            ${\partial(\log\kappa)\over
+                                             \partial(\log\rho)}_{T,X,Z}$}     \cr
+opt     | double precision | output  |\parasize=6.0cm
+                                      \para{partial derivative 
+                                            ${\partial(\log\kappa)\over
+                                             \partial(\log T)}_{\rho,X,Z}$}     \cr
+opx     | double precision | output  |\parasize=6.0cm
+                                      \para{partial derivative
+                                            ${\partial(\log\kappa)\over
+                                             \partial(\log X)}_{\rho,T,Z}$}     \cr
+opz     | double precision | output  |\parasize=6.0cm
+                                      \para{partial derivative
+                                            ${\partial(\log\kappa)\over
+                                             \partial(\log Z)}_{\rho,T,X}$}     \cr
+iexp    | integer          | output  |\parasize=6.0cm
+                                      \para{\itemize 1.5cm
+                                            \item{opint[cs]:} \# of table points
+                                               lying in the extrapolation domain
+                                            \item{opintf \ \ :} 0 
+                                            \enditemize\vskip -6mm}          \cr
+ier     | integer          | output  |\parasize=6.0cm
+                                      \para{if ier $=$ 1, the point lies
+                                            outside the given table domain, and
+                                            will be estimated by extrapolation
+                                            using Shepard's method; otherwise
+                                            ier=0}
+
+\endruledtable
+\bigskip
+\itemize 1.8truecm
+\litem{\bf Table 6:} argument description of routine opintf (opintc, opints).
+                     Curly brackets indicate values for AF94 tables.
+\enditemize
+\vfill\eject
+\section{4. Linking the interpolation routines with the main programme}
+After successful compilation of the OPINT-routines, the link editor
+under UNIX may be called as
+\bigskip
+\centerline{\small{\$(F77) \$(FFLAGS) {\it your\_programme}\quad -L{\it your\_path}/v9/lib\quad 
+                                        -lopint\quad }}
+%\vfill\eject
+\bigskip
+\section{5. Common-blocks}
+The following common blocks must not be altered between s/r call opinit and s/r 
+opintf (opintc, opints):
+\bigskip
+\hrule
+\example
+\obeyspaces{
+c
+c     pointers for the s/r opintd (used as argument 
+c     for s/r masubi)
+      common /jpoint/ nti
+      common /ipoint/ iali
+c
+c     partial derivatives and triangulation indices
+      common /pderiv/ iwk(niwkl),wk(nwkl,ntab,nzva)
+c
+      common /opadat/ opa(nxir,nyir,ntab,nzva),
+     +                rlg(nxir,ntab,nzva),
+     +                tlg(nyir,ntab,nzva)
+      common /valdat/ ivalo(nyir,ntab,nzva)
+      common /tablex/ xtab(ntab),iorder
+      common /tablez/ ztab(nzva)
+      common /xyzdat/ xd(ndat,nzva),
+     +                yd(ndat,nzva),
+     +                zd(ndat,ntab,nzva)
+      common /machin/ drelpr,toll,eps10
+c
+c     birational spline coefficients
+      common /birasp/ pp,tls(nyif),
+     +                ra(nxir,nyif,4,4,ntab,nzva)
+c     table dimension for s/r opintc{f} and opints
+      common /tabdim/ nzvai,ntabi,nxiri,nyiri,nyisi,iyifi,mdi,
+     +                nti,iali
+}
+\endexample
+\bigskip
+\hrule
+\bigskip
+\centerline{{\bf Figure 3:} common-blocks used in the OPINT-package}
+\bigskip
+\bigskip
+
+\section{6. File unit numbers}
+The following logical unit numbers are use in subroutine ``opinit''
+in open-statements:
+
+$lun = 29,\ 31,\ 32,\ 33,$
+\medskip
+and should therefore not be used in the calling routines.
+%\vfill\eject
+\vskip 8mm
+\leftline{\bf References}
+\bibliography{opint}
+\bibliographystyle{alpha}
+% \nocite{*}   % put all database entries into the reference list
+
+\printtoc
+\bye

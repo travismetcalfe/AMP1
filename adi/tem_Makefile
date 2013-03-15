@@ -1,0 +1,65 @@
+FC = #tem#FC#tem#
+FFLAGS = #tem#FFLAGS#tem#
+
+JCD = #tem#JCD#tem#
+
+LDIR = $(JCD)/gensr
+
+LOFILES.N = \
+$(LDIR)/aramax.d.o $(LDIR)/derive.d.o $(LDIR)/derivk.new.d.o $(LDIR)/leq.d.o \
+$(LDIR)/lininh.new.d.o $(LDIR)/lininh4.d.o $(LDIR)/ofiles.o \
+$(LDIR)/nrk.d.o $(LDIR)/vinta.d.o $(LDIR)/lir.d.o \
+$(LDIR)/vintk.new.d.o $(LDIR)/store.d.o $(LDIR)/notwin.d.o $(LDIR)/notwni.o \
+$(LDIR)/skpcom.o $(LDIR)/zero.d.o $(LDIR)/eiginh.d.o $(LDIR)/intgpt.d.o \
+$(LDIR)/spline.d.o $(LDIR)/length.o $(LDIR)/strcompr.o $(LDIR)/blstio.o
+
+LOFILES.C = \
+$(LDIR)/aramax.d.o $(LDIR)/derive.d.o $(LDIR)/derivk.new.d.o $(LDIR)/leq.d.o \
+$(LDIR)/lininh.new.d.o $(LDIR)/lininh4.d.o $(LDIR)/ofiles.c.o \
+$(LDIR)/nrk.d.o $(LDIR)/vinta.d.o $(LDIR)/lir.d.o \
+$(LDIR)/vintk.new.d.o $(LDIR)/store.d.o $(LDIR)/notwin.d.o $(LDIR)/notwni.o \
+$(LDIR)/skpcom.o $(LDIR)/zero.d.o $(LDIR)/eiginh.d.o $(LDIR)/intgpt.d.o \
+$(LDIR)/spline.d.o $(LDIR)/length.o $(LDIR)/strcompr.o $(LDIR)/blstio.o
+
+OFILES.N = \
+main.n.d.o adipls.n.d.o anldet.d.o cmparr.d.o danorm.d.o decicd.d.o \
+dmpgsm.d.o dmpmde.d.o dmpsum.d.o geninh.d.o gm1ker.n.d.o gravpo.n.d.o \
+kiner.n.d.o mchcff.d.o order.d.o takata.d.o \
+readml.n.d.o readsm.d.o rhs.n.d.o rotker.d.o \
+trnmod.n.d.o setbcs.n.d.o setssm.n.d.o signew.n.d.o rdfrqr.d.o varfrq.n.d.o \
+xlmult.d.o nrkint.n.d.o nrtssl.d.o stevft.n.d.o shtint.n.d.o mchsol.n.d.o \
+sclsol.d.o nrkm.d.o setsum.d.o sumout.d.o \
+sigint.n.d.o sigitr.n.d.o sigitc.n.d.o sigsol.n.d.o sigout.n.d.o sigscn.n.d.o \
+rsnfit.n.d.o
+
+OFILES.C = \
+main.c.d.o adipls.c.d.o anldet.d.o cmparr.d.o danorm.d.o decicd.d.o \
+dmpgsm.d.o dmpmde.d.o dmpsum.d.o geninh.d.o gm1ker.n.d.o gravpo.n.d.o \
+kiner.n.d.o mchcff.d.o order.d.o takata.d.o \
+readml.n.d.o res_adimod.c.d.o readsm.d.o \
+adirhs.c.d.o rotker.c.d.o \
+trnmod.n.d.o setbcs.n.d.o setssm.n.d.o signew.n.d.o rdfrqr.d.o varfrq.n.d.o \
+xlmult.d.o nrkint.c.d.o nrtssl.d.o stevft.n.d.o shtint.c.d.o mchsol.n.d.o \
+sclasl.c.d.o nrkm.d.o setsum.d.o sumout.d.o \
+sigint.n.d.o sigitr.n.d.o sigitc.c.d.o sigsol.c.d.o sigout.c.d.o sigscn.c.d.o \
+rsnfit.n.d.o res_adipar.c.d.o setups_adi.c.d.o set_rotation.c.d.o \
+setobs_st.c.d.o dump_obs.c.d.o \
+delta1.d.o delta2.d.o delta3.d.o \
+sph.d.o uhx.d.o
+
+default: adipls.n.d.x
+
+all: adipls.n.d.x adipls.c.d.x
+
+adipls.n.d.x: $(OFILES.N) lofiles.n
+	$(FC) $(FFLAGS) -o adipls.n.d.x $(OFILES.N) $(LOFILES.N) 
+
+adipls.c.d.x: $(OFILES.C) lofiles.c
+	$(FC) $(FFLAGS) -o adipls.c.d.x $(OFILES.C) $(LOFILES.C) 
+
+
+lofiles.n:
+	cd $(LDIR); make $(LOFILES.N)
+
+lofiles.c:
+	cd $(LDIR); make $(LOFILES.C)

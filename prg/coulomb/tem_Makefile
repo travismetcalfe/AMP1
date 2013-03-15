@@ -1,0 +1,6 @@
+FC = #tem#FC#tem#
+FFLAGS = #tem#FFLAGS#tem#
+
+%.o : %.f
+	$(FC) $(FFLAGS) -c $<
+

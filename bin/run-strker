@@ -1,0 +1,13 @@
+#!/bin/csh
+#  driver for kernel-setting programme
+
+if($#argv == 0) then
+  echo "Usage:"
+  echo "run-strker <input> <output>"
+  echo "A template input file is in" $eprgdir"/bin/rin/strker.rin"
+  echo "A template script is in    " $eprgdir"/bin/run.strker.rin"
+  exit(1)
+endif
+
+get-input $1 | $eprgdir/strker/kerexact.x > $2
+

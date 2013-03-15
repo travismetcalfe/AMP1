@@ -1,0 +1,299 @@
+;  IDL script to read out from rhs (obtained with idgn77 > 0) for
+;  two calculations (residing in different directories), 
+;  to allow comparison between them.
+
+;  Version for case with diffusion, and with storage of zz
+;  =======================================================
+
+!p.charsize=1.3
+;!x.range=[400,460]
+
+; IDL Version 5.2 (IRIX mipseb)
+; Journal File for jcd@bigcat
+; Working directory: /scratch/tac/usr/jcd/emdl94/dimauro
+; Date: Tue Dec 21 09:43:19 1999
+device,retain=2
+ 
+nrdmax=50
+nn=0l
+nvar=0l
+dt=0.d0
+openr,1,'ttt.rhs',/f77
+readu,1,nn,nvar,dt
+print,nn,nvar,dt
+;         601           9
+iter=0l
+ialamw=0l
+iyfdst=0l
+nrd=-1
+while not eof(1) and nrd lt nrdmax do begin $
+  readu,1,iter, ialamw, iyfdst &$
+  if nrd eq -1 then begin $
+    xyfr=dblarr(iyfdst,nn) &$
+    xyf=dblarr(iyfdst,nn,nrdmax) &$
+  endif &$
+  print,iter, ialamw, iyfdst &$
+  nrd=nrd+1 &$
+  readu,1,xyfr &$
+  xyf(*,*,nrd)=xyfr  &$
+endwhile
+
+xyf=xyf(*,*,0:nrd)
+
+close,1
+read_nemdls,1,nn,ndata,datmod1,idatmd,bc,x,y, $
+  file='ttt.emdl'
+close,1
+
+xf=reform(xyf(0,*,*))
+
+yf=reform(xyf(1:nvar,*,*),nvar,nn,nrd+1)
+
+zz=reform(xyf(nvar+1:2*nvar,*,*),nvar,nn,nrd+1)
+
+ff=reform(xyf(2*nvar+1:3*nvar,*,*),nvar,nn,nrd+1)
+
+fd=reform(xyf(1+3*nvar:nvar*nvar+3*nvar,*,*),nvar,nvar,nn,nrd+1)
+
+print,'End setting xf, yf, zz, ff, fd'
+
+ialam=0
+iyfdst_al = 1+nvar*(3+ialamw+(1+ialamw)*nvar)
+if iyfdst ge iyfdst_al then begin $
+  print,'Including alam' &$
+  alam=reform(xyf(1+nvar*(3+nvar):nvar*(3+ialamw+nvar),*,*),ialamw,nvar,nn,nrd+1) &$
+  alamd=reform(xyf(1+nvar*(3+ialamw+nvar):nvar*(3+ialamw+(1+ialamw)*nvar),*,*), $
+                 ialamw,nvar,nvar,nn,nrd+1) &$
+  ialam=1 &$
+endif
+
+idiffus=0
+if iyfdst gt iyfdst_al then begin $
+  idiffus = 1 &$
+  print,'Including diffusion quantities' &$
+  diffus=reform(xyf(iyfdst_al:iyfdst-1,*,*)) &$
+  ddr=reform(diffus(4,*,*)-diffus(3,*,*)) &$
+endif
+
+dyf=yf
+for i=0,nrd do begin $
+  for j=0,nvar-1 do dyf(j,0:nn-2,i)=(yf(j,1:nn-1,i)-yf(j,0:nn-2,i))/ $
+			  (xf(1:nn-1,i)-xf(0:nn-2,i)) &$
+endfor
+
+print,'End setting dyf'
+
+dzz=zz
+for i=0,nrd do begin $
+  for j=0,nvar-1 do dzz(j,0:nn-2,i)=(zz(j,1:nn-1,i)-zz(j,0:nn-2,i))/ $
+			  (xf(1:nn-1,i)-xf(0:nn-2,i)) &$
+endfor
+
+print,'End setting dzz'
+
+ffm=ff
+for i=0,nrd do begin $
+  for j=0,4 do ffm(j,0:nn-2,i)=0.5*(ff(j,1:nn-1,i)+ff(j,0:nn-2,i)) &$
+endfor
+
+print,'End setting ffm'
+
+;dxyf=reform(yf(4,*,*)+yf(6,*,*)-0.98d0)
+
+ntst=n_elements(yf(0,0,*))-1
+
+dff=0*ff 
+dfft=0*fd 
+for ktst=1,ntst do begin $
+  for i=0,nvar-1 do begin $
+    for j=0,nvar-1 do begin &$
+      dfft(i,j,*,ktst)=fd(i,j,*,ktst)*(yf(j,*,ktst)-yf(j,*,ktst-1)) &$
+      dff(i,*,ktst)=dff(i,*,ktst)+dfft(i,j,*,ktst) &$
+    endfor &$
+  endfor &$
+endfor
+
+
+if ialam then begin $
+  dalam=0*alam &$
+  dalamt=0*alamd &$
+  for ktst=1,ntst do begin $
+    for ia=0,ialamw-1 do begin &$
+      for i=0,nvar-1 do begin &$
+        for j=0,nvar-1 do begin &$
+          dalamt(ia,i,j,*,ktst)= $
+	    alamd(ia,i,j,*,ktst)*(yf(j,*,ktst)-yf(j,*,ktst-1)) &$
+          dalam(ia,i,*,ktst)=dalam(ia,i,*,ktst)+dalamt(ia,i,j,*,ktst) &$
+        endfor &$
+      endfor &$
+    endfor &$
+  endfor &$
+endif
+
+ffg=0.*reform(ff(4,*,*))
+ffmt=ffg
+if ialam then begin &$
+  for k=0,nrd do begin &$
+    for i=0,5 do ffg(*,k)=ffg(*,k)+alam(0,i,*,k)*(yf(i,*,k)-yf(i,*,0))/dt &$
+    ffmt(0:nn-2,k)=ffm(4,0:nn-2,k)+0.5d0*(ffg(0:nn-2,k)+ffg(1:nn-1,k)) &$
+  endfor &$
+endif
+ 
+a4=datmod1(22,0)/1.d33
+
+eps=reform(ff(4,*,*)/(a4*10.d0^(xf-yf(4,*,*))))
+
+epsg=reform(ffg(*,*)/(a4*10.d0^(xf-yf(4,*,*))))
+
+xf=xf(*,0)
+q=10.d0^xf
+
+dlxdpl=reform(yf(3,*,*))
+for i=0,nrd do dlxdpl(*,i)=reform(deriv(zz(1,*,i),alog10(yf(3,*,i))))
+rhxp=reform(-5*yf(3,*,*)/(3+5*yf(3,*,*)-yf(4,*,*)))
+dtxh=dlxdpl*rhxp
+
+gradt=reform(ff(2,*,*)/ff(1,*,*))
+
+nrdmax=50
+
+nn1=0l
+nvar1=0l
+dt1=0.d0
+openr,1,'../../evoltest-tma2/testcz/ttt.rhs',/f77
+readu,1,nn1,nvar1,dt1
+print,nn1,nvar1,dt1
+;         601           9
+iter1=0l
+ialamw1=0l
+iyfdst1=0l
+nrd1=-1
+while not eof(1) and nrd1 lt nrdmax do begin $
+  readu,1,iter1, ialamw1, iyfdst1 &$
+  if nrd1 eq -1 then begin $
+    xyfr1=dblarr(iyfdst1,nn1) &$
+    xyf1=dblarr(iyfdst1,nn1,nrdmax) &$
+  endif &$
+  print,iter1, ialamw1, iyfdst1 &$
+  nrd1=nrd1+1 &$
+  readu,1,xyfr1 &$
+  xyf1(*,*,nrd1)=xyfr1  &$
+endwhile
+
+xyf1=xyf1(*,*,0:nrd1)
+
+close,1
+read_nemdls,1,nn1,ndata1,datmod11,idatmd1,bc1,x1,y1, $
+  file='../../evoltest-tma2/testcz/ttt.emdl'
+close,1
+
+xf1=reform(xyf1(0,*,*))
+
+yf1=reform(xyf1(1:nvar1,*,*),nvar1,nn1,nrd1+1)
+
+zz1=reform(xyf1(nvar1+1:2*nvar1,*,*),nvar1,nn1,nrd1+1)
+
+ff1=reform(xyf1(2*nvar1+1:3*nvar1,*,*),nvar1,nn1,nrd1+1)
+
+fd1=reform(xyf(1+3*nvar1:nvar1*nvar1+3*nvar1,*,*),nvar1,nvar1,nn1,nrd1+1)
+
+print,'End setting xf1, yf1, zz1, ff1, fd1'
+
+ialam1=0
+iyfdst_al1 = 1+nvar1*(3+ialamw+(1+ialamw)*nvar1)
+if iyfdst1 ge iyfdst_al1 then begin $
+  print,'Including alam1' &$
+  alam1=reform(xyf1(1+nvar1*(3+nvar1):nvar1*(3+ialamw1+nvar1),*,*),ialamw1,nvar1,nn1,nrd1+1) &$
+  alamd1=reform(xyf1(1+nvar1*(3+ialamw1+nvar1):nvar1*(3+ialamw1+(1+ialamw1)*nvar1),*,*), $
+                 ialamw1,nvar1,nvar1,nn1,nrd1+1) &$
+  ialam1=1 &$
+endif
+
+idiffus1=0
+if iyfdst1 gt iyfdst_al1 then begin $
+  idiffus1 = 1 &$
+  print,'Including diffusion quantities' &$
+  diffus1=reform(xyf1(iyfdst_al1:iyfdst1-1,*,*)) &$
+  ddr=reform(diffus1(4,*,*)-diffus1(3,*,*)) &$
+endif
+
+dyf1=yf1
+for i=0,nrd1 do begin $
+  for j=0,nvar1-1 do dyf1(j,0:nn1-2,i)=(yf1(j,1:nn1-1,i)-yf1(j,0:nn1-2,i))/ $
+			  (xf1(1:nn1-1,i)-xf1(0:nn1-2,i)) &$
+endfor
+
+print,'End setting dyf1'
+
+dzz1=zz1
+for i=0,nrd1 do begin $
+  for j=0,nvar1-1 do dzz1(j,0:nn1-2,i)=(zz1(j,1:nn1-1,i)-zz1(j,0:nn1-2,i))/ $
+			  (xf1(1:nn1-1,i)-xf1(0:nn1-2,i)) &$
+endfor
+
+print,'End setting dzz1'
+
+ffm1=ff1
+for i=0,nrd1 do begin $
+  for j=0,4 do ffm1(j,0:nn1-2,i)=0.5*(ff1(j,1:nn1-1,i)+ff1(j,0:nn1-2,i)) &$
+endfor
+
+print,'End setting ffm1'
+
+;dxyf1=reform(yf1(4,*,*)+yf1(6,*,*)-0.98d0)
+
+ntst1=n_elements(yf1(0,0,*))-1
+
+dff1=0*ff1 
+dfft1=0*fd1 
+for ktst=1,ntst1 do begin $
+  for i=0,nvar1-1 do begin $
+    for j=0,nvar1-1 do begin &$
+      dfft1(i,j,*,ktst)=fd1(i,j,*,ktst)*(yf1(j,*,ktst)-yf1(j,*,ktst-1)) &$
+      dff1(i,*,ktst)=dff1(i,*,ktst)+dfft1(i,j,*,ktst) &$
+    endfor &$
+  endfor &$
+endfor
+
+
+if ialam1 then begin $
+  dalam1=0*alam1 &$
+  dalamt1=0*alamd1 &$
+  for ktst=1,ntst1 do begin $
+    for ia=0,ialamw1-1 do begin &$
+      for i=0,nvar1-1 do begin &$
+        for j=0,nvar1-1 do begin &$
+          dalamt1(ia,i,j,*,ktst)= $
+	    alamd1(ia,i,j,*,ktst)*(yf1(j,*,ktst)-yf1(j,*,ktst-1)) &$
+          dalam1(ia,i,*,ktst)=dalam1(ia,i,*,ktst)+dalamt1(ia,i,j,*,ktst) &$
+        endfor &$
+      endfor &$
+    endfor &$
+  endfor &$
+endif
+
+ffg1=0.*reform(ff1(4,*,*))
+ffmt1=ffg1
+if ialam1 then begin &$
+  for k=0,nrd1 do begin &$
+    for i=0,5 do ffg1(*,k)=ffg1(*,k)+alam1(0,i,*,k)*(yf1(i,*,k)-yf1(i,*,0))/dt &$
+    ffmt1(0:nn1-2,k)=ffm1(4,0:nn1-2,k)+0.5d0*(ffg1(0:nn1-2,k)+ffg1(1:nn1-1,k)) &$
+  endfor &$
+endif
+ 
+a41=datmod1(22,0)/1.d33
+
+eps1=reform(ff1(4,*,*)/(a41*10.d0^(xf1-yf1(4,*,*))))
+
+epsg1=reform(ffg1(*,*)/(a41*10.d0^(xf1-yf1(4,*,*))))
+
+xf1=xf1(*,0)
+q1=10.d0^xf1
+
+dlxdpl1=reform(yf1(3,*,*))
+for i=0,nrd1 do dlxdpl1(*,i)=reform(deriv(zz1(1,*,i),alog10(yf1(3,*,i))))
+rhxp1=reform(-5*yf1(3,*,*)/(3+5*yf1(3,*,*)-yf1(4,*,*)))
+dtxh1=dlxdpl1*rhxp1
+
+gradt1=reform(ff1(2,*,*)/ff1(1,*,*))
+

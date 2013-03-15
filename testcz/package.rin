@@ -1,0 +1,28 @@
+**** Note: imixcr changed from 2 to 12, 4/3/03
+
+Input files for redistrb and adipls
+
+#in_evol  @
+#in_rdist  @
+#in_adi  @
+
+Header and case for parameter output:
+
+param   @
+#case   @
+
+Trial model mass for parameter run:
+
+0.#tmass0e2    @
+
+Masses for trial-model grid
+
+0.75 1.75 0.01   @
+
+
+*********************************************************************************************
+
+Masses for model calculations:
+
+-1. 0 @
+1.0 4.6d9  

@@ -1,0 +1,209 @@
+#!/bin/csh
+#  driver for evol.n.d.x. Usage:
+#  run-evol [-case] <input> [<output> <log file>]
+#  uses the file <input> as input (assumed to be in current directory,
+#  if complete path is not given)
+#  produces output file on <output>, 
+#  or on /scratch/tac/tmp/<user>/evolprg/<output>
+#  if complete path is not given
+#  If log file is not set, log is written to the file run-evol.log
+#  -case is used to select version of programme:
+if ($#argv < 2) then
+        echo "Usage: run-evol [-case] <input> [<output> <log file>]"
+#       echo "Selection of programme:"
+	exit(1)
+endif
+
+set user = `whoami`
+
+# set directories, depending on machine
+
+set h=`/bin/uname -n`
+
+set evoldir = "#tem#DIR#tem#/prg"
+set scroot = "scratch"
+
+#  test for creating scratch directory
+
+
+if(-d $scroot) then
+else
+	mkdir $scroot
+	echo Making $scroot
+endif
+
+if(-d $scroot/evolprg) then
+else
+	mkdir $scroot/evolprg
+	echo Making $scroot/evolprg
+endif
+
+# defaults:
+
+set prog = evol.n.d.x
+
+while ($#argv != 0)
+	switch($1)
+		shift
+		breaksw
+		shift
+		breaksw
+	case -b9z: 
+		set prog = evol.b9z.d.x
+		breaksw
+	case -c9z: 
+		set prog = evol.c9z.d.x
+		breaksw
+        case -cp9z:
+                set prog = evol.cp9z.d.x
+                breaksw
+        case -cap9z:
+                set prog = evol.cap9z.d.x
+                breaksw
+        case -cam9z:
+                set prog = evol.cam9z.d.x
+                breaksw
+        case -cam11z:
+                set prog = evol.cam11z.d.x
+                breaksw
+        case -dcamliv0511z:
+                set prog = evol.dcamliv0511z.d.x
+                breaksw
+	case -cb9z: 
+		set prog = evol.cb9z.d.x
+		breaksw
+        case -cap10z:
+                set prog = evol.cap10z.d.x
+                breaksw
+	case -b10z: 
+		set prog = evol.b10z.d.x
+		breaksw
+	case -c11z: 
+		set prog = evol.c11z.d.x
+		breaksw
+	case -db9z: 
+		set prog = evol.db9z.d.x
+		breaksw
+	case -dc11z: 
+		set prog = evol.dc11z.d.x
+		breaksw
+        case -dcap9z:
+                set prog = evol.dcap9z.d.x
+                breaksw
+        case -dcapliv9z:
+                set prog = evol.dcap9z-liv.d.x
+                breaksw
+	case -cdb9z: 
+		set prog = evol.cdb9z.d.x
+		breaksw
+	case -bliv019z: 
+		set prog = evol.bz-liv019.d.x
+		breaksw
+	case -dbliv9z: 
+		set prog = evol.dbz-liv9.d.x
+		breaksw
+	case -dbliv10z: 
+		set prog = evol.dbz-liv10.d.x
+		breaksw
+	case -dbliv11z: 
+		set prog = evol.dbz-liv11.d.x
+		breaksw
+	case -dbliv9z.dg: 
+		set prog = evol.dbz-liv9.dg.d.x
+		breaksw
+	case -dcliv9z: 
+		set prog = evol.dcz-liv9.d.x
+		breaksw
+	case -dcliv11z: 
+		set prog = evol.dcz-liv11.d.x
+		breaksw
+	case -dbliv019z: 
+		set prog = evol.dbz-liv019.d.x
+		breaksw
+	case -dcliv019z: 
+		set prog = evol.dcz-liv019.d.x
+		breaksw
+	case -dbliv019hz:
+                set prog = evol.dbz-liv019h.d.x
+                breaksw
+	case -dcliv019hz: 
+		set prog = evol.dcz-liv019h.d.x
+		breaksw
+	case -dcliv0111z: 
+		set prog = evol.dcz-liv0111.d.x
+		breaksw
+	case -dbliv01z9hz:
+                set prog = evol.dbz-liv01z9h.d.x
+                breaksw
+	case -dbliv059z:
+                set prog = evol.dbz-liv059.d.x
+                breaksw
+        case -dbliv059hz:
+                set prog = evol.dbz-liv059h.d.x
+                breaksw
+	case -dcliv059z:
+                set prog = evol.dcz-liv059.d.x
+                breaksw
+	case -dcliv0511z:
+                set prog = evol.dcz-liv0511.d.x
+                breaksw
+	case -*:
+		echo $1 "not allowed"
+		exit(1)
+	default:
+		set ain = $1
+		if($#argv >= 2) then
+		  set aout = $2
+		  shift
+		endif
+		if($#argv <= 1) then
+			set log = run-evol.log
+		else
+			set log = $2
+			shift
+		endif
+	endsw
+	shift
+end
+
+echo "Using programme " $prog
+
+set dirin=`test-dir $ain`
+if ($dirin == "n") then
+	set in = $cwd/$ain
+else
+	set in = $in
+endif
+
+if($?aout) then
+  set dirout=`test-dir $aout`
+  if ($dirout == "n") then
+	set out = $scroot/evolprg/$aout
+  else
+	set out = $aout
+  endif
+endif
+
+# set log file
+
+(echo "Start: \c" ; date) > $log
+echo "Programme directory:" $evoldir >> $log
+set a = `chdir $evoldir ; /bin/ls -l $prog`
+echo "Programme version:" $a >> $log
+
+set prog1 = $scroot/evolprg/evol$$.x
+set t = ttt.run-evol.$$
+echo "cd " $cwd > $t
+echo "cp "$evoldir"/"$prog $prog1 >> $t
+echo "get-input "$in" | \" >> $t
+if($?out) then
+	echo $prog1 "> \" >> $t
+	echo $out >> $t
+else
+	echo $prog1  >> $t
+endif
+echo rm  -f $prog1 >> $t
+
+csh $t
+
+rm $t

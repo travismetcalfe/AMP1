@@ -1,0 +1,12 @@
+nn,icnmsh
+2401,,,  
+2402,,,  @
+icase,icvzbn,nsmth,ndisc,dlxdsc,dlgrmx,cacvzb
+,,9,60,,,,  
+,,9,60,0.0002,,, @  
+cg,cx,ca,cdgr,cddgr,cdg,alphsf,adda4
+0.001,1,0.005,,,0.01,,,,,,,,,,,  @
+nout,cn,irsu,unew   
+30,,,,,,,,,  @
+nmodel,kmodel,itsaml,ioldex, idsin, idsout
+,,,,,,,,,,,,,,,  @

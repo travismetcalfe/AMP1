@@ -1,0 +1,4 @@
+#!/bin/csh
+#sed -f set_double.sed $1 > $2
+sed -e 's/^c#dble#//' $1 > $2
+

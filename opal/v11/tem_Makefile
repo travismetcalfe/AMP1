@@ -1,0 +1,123 @@
+#
+# Template Makefile for opacity-interpolation-package
+#
+# G. Houdek
+# 27Feb06
+#
+#--------------------------------------------
+#
+#RANLIB = ranlib	#use ranlib
+RANLIB	= echo		# no ranlib
+#
+FC = #tem#FC#tem#
+FFLAGS = #tem#FFLAGS#tem#
+#
+#FC	= DF
+#FFLAGS = /fast /arch:pn3 /tune:pn3
+#FFLAGS = /fast /convert:big_endian /arch:pn3 /tune:pn3
+#FFLAGS = /check:bounds /dbglibs /debug:full /convert:big_endian /arch:pn3 /tune:pn3 /traceback /warn:argument_checking
+#
+#FC=f77
+#FFLAGS = -native -fast
+#FFLAGS = -native -g -C
+#FFLAGS = -fast
+#FFLAGS = -cxdb -fi -cs
+#FFLAGS = -O1 -32
+#FFLAGS = -fast -xld -C
+
+#%.o : %.f
+#	$(FC) $(FFLAGS) -c $<
+
+.KEEP_STATE:
+
+all: opalb opal_exak opal_exR5\
+     af05b af05_exR5 opafpd\
+     doptesf dopdof dopdos
+     
+
+#--------------------------------------------
+
+OPAL_DIR   = opal_AGS05c1
+AF05_DIR   = af05_AGS04
+LIB_DIR    = lib
+LIB_LIB    = libopint.a
+
+LIB_DEX = -lopint
+
+LIB_DIL = -L$(LIB_DIR)
+
+
+LIB_OBJ = condux_ad.o	  dopinit.o	           	  ratmat.o\
+	  condux_cf.o	  dopintc.o	  dshep.o	  rbival.o\
+	  dadjac.o	  dopintf.o	  duvip3d.o	  rbivpd.o\
+	  dctang.o	  dopints.o	  duvip3p.o	  rde05.o \
+	  dextrp.o	  dordgr.o	  gi.o		  rdi95.o \
+	  dhunt.o	  dordgri.o	  gid.o		  rdaf05.o\
+	  dintrp.o	  dpderix.o	  inttwo.o	  rtperm.o\
+	  dintrpi.o	  dpderiy.o	  itoh_coeff_cf.o sbilin.o\
+	  dmaceps.o	  dpdmin.o	  itoh_ec_ad.o	  sfa_ad.o\
+	  dmasub.o	  dpdste.o	  itoh_ec_cf.o	  sfa_cf.o\
+	  dmasube.o	  dreade.o	  itoh_init_ad.o  trdisa.o\
+	  dmasubi.o	  dreadi.o	  itoh_init_cf.o  trdisb.o\
+	  dmaxmn.o	          	  rat2d.o	  dcspline.o\
+	  opalkz.o	  opingh.o
+
+
+LIB_SRC = $(LIB_OBJ:%.o=$(LIB_DIR)/%.f)
+
+lib:	$(LIB_DIR)/$(LIB_LIB)
+
+dopdof: $(LIB_DIR)/$(LIB_LIB) dopdof.o
+	$(FC) $(FFLAGS) -o dopdof $@.o $(LIB_DIL) $(LIB_DEX)
+
+dopdos: $(LIB_DIR)/$(LIB_LIB) dopdos.o
+	$(FC) $(FFLAGS) -o dopdos $@.o $(LIB_DIL) $(LIB_DEX)
+
+doptesf:$(LIB_DIR)/$(LIB_LIB) doptesf.o
+	$(FC) $(FFLAGS) -o doptesf $@.o $(LIB_DIL) $(LIB_DEX)
+
+opalb:	opalb.o
+	$(FC) $(FFLAGS) -o $@ $@.o
+
+opal_exak: $(LIB_DIR)/$(LIB_LIB) opal_exak.o
+	$(FC) $(FFLAGS) -o $@ $@.o $(LIB_DIL) $(LIB_DEX)
+
+opal_exR5:$(LIB_DIR)/$(LIB_LIB) opal_exR5.o
+	$(FC) $(FFLAGS) -o $@ $@.o $(LIB_DIL) $(LIB_DEX)
+
+af05b: $(LIB_DIR)/$(LIB_LIB) af05b.o
+	$(FC) $(FFLAGS) -o $@ $@.o $(LIB_DIL) $(LIB_DEX)
+
+af05_exR5:$(LIB_DIR)/$(LIB_LIB) af05_exR5.o
+	$(FC) $(FFLAGS) -o $@ $@.o $(LIB_DIL) $(LIB_DEX)
+
+opafpd: $(LIB_DIR)/$(LIB_LIB) opafpd.o
+	$(FC) $(FFLAGS) -o $@ $@.o $(LIB_DIL) $(LIB_DEX)
+
+$(LIB_DIR)/$(LIB_LIB): FORCE
+	@(cd $(@D); make \
+		    FC="$(FC)" LIB="$(LIB_LIB)" LIB_OBJ="$(LIB_OBJ)" \
+		    FFLAGS="$(FFLAGS)" RANLIB="$(RANLIB)" \
+		    F77FLAGS="$(FFLAGS)" \
+	)
+
+tab: opalb opal_exak opal_exR5 af05b af05_exR5 opafpd
+	(cd $(OPAL_DIR); ../opalb; ../opal_exak; ../opal_exR5)
+	(cd $(AF05_DIR); ../af05b; ../af05_exR5)
+	(./opafpd)
+
+FORCE:
+
+clean:
+	touch dummy.trace
+	touch $(LIB_DIR)/dummy.o
+	touch $(OPAL_DIR)/dummy.o
+	touch $(AF05_DIR)/dummy.o
+	rm -f  dopdof dopdos doptesf
+	rm -f  opalb opal_exak opal_exR5 af05b af05_exR5 opafpd
+	rm -f  *.o fort.* core *.trace *.ps *.pdf *.lst *.fln *.exe
+	rm -f $(LIB_DIR)/*.o $(LIB_DIR)/*.a
+	rm -f $(OPAL_DIR)/*.o $(OPAL_DIR)/fort.* $(OPAL_DIR)/*.bin
+	rm -f $(OPAL_DIR)/big_endian/* $(OPAL_DIR)/little_endian/*
+	rm -f $(AF05_DIR)/*.o $(AF05_DIR)/fort.* $(AF05_DIR)/*.bin
+	rm -f $(AF05_DIR)/big_endian/* $(AF05_DIR)/little_endian/*

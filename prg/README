@@ -1,0 +1,29 @@
+Controls of unit numbers:
+========================
+
+Hardcoded numbers:
+
+Unit numbers used in Houdek opacity initialization:
+
+29, 31, 32, 33.
+
+These are only used in the initializing call of opinit and are closed on
+exit from opinit.
+
+Reserve units 61 - 98 for hardcoded diagnostics units.
+
+Currently the following are used:
+
+61: Diagnostics from s/r cmpcvc
+
+62: Diagnostics from s/r setdt (before 7/7/05 unit 43 was used)
+
+75: Diagnostics from s/r varfrq (controlled by idgn75)
+
+76: Diagnostics from boundary condition routines (controlled by idgn76)
+
+77, 87: Diagnostics from s/r rhs (controlled by idgn77)
+
+91: General scratch input/output 
+
+99: Used for localized output where the file is closed immediately.

@@ -1,0 +1,2 @@
+#!/bin/csh
+sed -e 's/^c#sngl#//' $1 > $2

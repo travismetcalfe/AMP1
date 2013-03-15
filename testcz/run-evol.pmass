@@ -1,0 +1,78 @@
+#!/bin/csh
+#  driver for for evolution programme, varying mass
+#  usage: 
+#  run-evol.mass <new mass> <trial mass> <100 Z> <case>
+#  [<no. of timesteps>]
+
+#source /auto_mnt/r6/tbn/.cshrc
+
+if($#argv == 0) then
+  echo "Usage:"
+  echo "run-evol.mass <new mass> <trial mass> <100 Z> <case>"
+  echo "[<no. of timesteps>]"
+  exit(1)
+endif
+
+if(-d emdl) then
+else
+  mkdir emdl
+  echo "Making directory emdl"
+endif
+
+if(-d ttt) then
+else
+  mkdir ttt
+  echo "Making directory ttt"
+endif
+
+#set dir = `cat DIR`
+
+#set root = "/ai43"
+#set root = "/ai4"
+
+set sdir = ./ttt
+#set sdir = /hosts/big_scr/tmp/$dir
+#set sdir = /home/ori_ai11/$dir
+
+
+if($#argv <= 4) then
+	set nt = 200
+else
+	set nt = $5
+endif
+
+#if($3 == "00") then
+#	set iqfit = "5"
+#else
+#	set iqfit = "-7"
+#endif
+
+set iqfit = "5"
+
+echo "s/#mass/"$1"/" > tmp$$
+echo "s/#tmass/"$2"/" >> tmp$$
+echo "s/#z/"$3"/" >> tmp$$
+echo "s/#case/"$4"/" >> tmp$$
+echo "s/#iqfit/"$iqfit"/" >> tmp$$
+echo "s/#nt/"$nt"/" >> tmp$$
+#echo "s?#dir?"$dir"?" >> tmp$$
+#echo "s?#root?"$root"?" >> tmp$$
+echo "s?#evolfile?evol-file"$$".log?" >> tmp$$
+sed -f tmp$$ evol.pmass.rin > tmp1$$
+run-evol -cp9z tmp1$$ $sdir/ttt.evol.mass.$1.$3.$4.s run-evol$$.log
+#run-evol -b10z tmp1$$ $sdir/ttt.evol.mass.$1.$3.$4.s run-evol$$.log
+
+if(-f ttt.rhs) cp -p ttt.rhs ttt.rhs.$4
+if(-f ttt.crhs) cp -p ttt.crhs ttt.crhs.$4
+if(-f ttt.emdl) cp -p ttt.emdl ttt.emdl.$4
+
+#rm tmp$$ tmp1$$
+
+#cat run-evol$$.log evol-file$$.log > log/log.$1.Z$3.$4.s
+
+#rm run-evol$$.log evol-file$$.log
+
+#set-bsum csum.$1.Z$3.$4.s
+
+#sel-emdl.n.d emdl.$1.Z$3.$4.s
+

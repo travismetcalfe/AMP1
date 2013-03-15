@@ -1,0 +1,95 @@
+#!/bin/csh
+#  Script to edit various files to recreate templates
+#  Usage: resetups 
+
+
+set dir = `chdir ..; echo $cwd`
+
+cd ..
+
+set n_make = `find . -name 'Makefile' -print | wc -l`
+
+if($n_make > 0) then
+
+  echo "s?"$dir"?#tem#JCD#tem#?" > tmp_sed$$
+  echo "s/^FC *=.*/FC = #tem#FC#tem#/" >> tmp_sed$$
+  echo "s/^FFLAGS *=.*/FFLAGS = #tem#FFLAGS#tem#/" >> tmp_sed$$
+  echo "s/^set_prec.*double/#dble#&/" >> tmp_sed$$
+  echo "s/^set_prec.*single/#sngl#&/" >> tmp_sed$$
+
+
+#  echo grep -l \'$dir\' \`find . -name \'Makefile\' -print\` > tmp_grep$$
+#  csh tmp_grep$$ > tmp_list$$
+  find . -name 'Makefile' -print > tmp_list$$
+
+  foreach f (`cat tmp_list$$`)
+    set newf = `echo $f | sed -e 's/Makefile/tem_Makefile/'`
+    echo "Resetting" $newf
+    sed -f tmp_sed$$ $f > $newf
+  end
+  
+  rm tmp_sed$$
+
+else
+  echo "No Makefiles to reset"
+endif
+
+cd opac
+
+echo grep -l \'$dir\' '*' > tmp_grep$$
+csh tmp_grep$$ | grep -v tmp_grep > tmp_list$$
+
+set n_opac = `wc -l tmp_list$$`
+
+if($n_opac[1] > 0) then
+  echo "s?"$dir"?#tem#DIR#tem#?" > tmp_sed$$
+  echo "s?little_endian?#endian?" >> tmp_sed$$
+  echo "s?big_endian?#endian?" >> tmp_sed$$
+  foreach f (`cat tmp_list$$`)
+    set newf = `echo $f | sed -e 's/^/tem_/'`
+    echo "Reset $newf"
+    sed -f tmp_sed$$ $f > $newf
+  end
+  rm -f tmp_sed$$
+
+else
+  echo "No opac files to reset"
+endif
+
+rm tmp_list$$ tmp_grep$$
+
+
+cd ../bin
+
+if(-f run-evol) then
+
+  echo "Resetting run-evol"
+  echo "s?"$dir"?#tem#DIR#tem#?" > tmp_sed$$
+
+  sed -f tmp_sed$$ run-evol > tem_run-evol
+  rm -f tmp_sed$$
+
+endif
+
+cd ..
+set n_rin = `find . -name '*rin' -print | wc -l`
+
+if($n_rin > 0) then
+
+  echo "s?"$dir"?#tem#DIR#tem#?" > tmp_sed$$
+
+  echo grep -l \'$dir\' \`find . -name \'\*rin\' -print\` > tmp_grep$$
+  csh tmp_grep$$ > tmp_list$$
+
+  foreach f (`cat tmp_list$$`)
+    set newf = `echo $f | sed -e 's/.*\//&tem_/'`
+    echo "Resetting" $newf
+    sed -f tmp_sed$$ $f > $newf
+  end
+  
+  rm tmp_sed$$ tmp_grep$$ tmp_list$$
+
+else
+  echo "No rin files to reset"
+endif
+

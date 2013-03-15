@@ -1,0 +1,74 @@
+; IDL script to read out from mshstr (obtained with idgn75 > 0)
+
+; IDL Version 5.2 (IRIX mipseb)
+; Journal File for jcd@bigcat
+; Working directory: /scratch/tac/usr/jcd/emdl94/dimauro
+; Date: Tue Dec 21 09:43:19 1999
+ 
+jvar5=0l
+nn=0l
+ntime=0l
+nvar=0l
+ntimes=intarr(2000)
+jvar5s=ntimes
+nvars=ntimes
+termss=dblarr(30,2401,500)
+akss=dblarr(2401,500)
+nrd=-1
+
+openr,1,'ttt.mshstr',/f77
+while not eof(1) do begin $
+  readu,1,ntime,jvar5,nn,nvar &  nrd=nrd+1 &$
+  ntimes(nrd)=ntime & jvar5s(nrd)=jvar5 & nvars(nrd)=nvar &$
+  print,ntime,jvar5,nn,nvar &$
+  terms=dblarr(jvar5,nn) &$
+  readu,1,terms  &$
+  aks=dblarr(nn) &$
+  readu,1,aks &$
+  termss(0:jvar5-1,0:nn-1,nrd)=terms &$
+  akss(0:nn-1,nrd)=aks &$
+endwhile
+
+termss=termss(*,0:nn-1,*)
+akss=akss(0:nn-1,*)
+
+akss=akss(*,0:nrd)
+termss=termss(*,*,0:nrd)
+ntimes=ntimes(0:nrd)
+jvar5s=jvar5s(0:nrd)
+nvars=nvars(0:nrd)
+
+dakss=akss
+for i=0,nrd do dakss(*,i)=akss(*,i)-indgen(nn)
+
+xx=reform(termss(0,*,*))
+
+jr=jvar5-nvar
+xrs=xx
+for i=0,nrd do xrs(*,i)=10.d0^(termss(jr,*,i)-termss(jr,0,i))
+jxh=jr+4
+xh=xx
+for i=0,nrd do xh(*,i)=termss(jxh,*,i)
+
+dtxh=reform(sqrt(termss(7,*,*)))
+
+itxh=dtxh
+
+for i=0,nrd do itxh(*,i)=ftrap_int(xx(*,i),dtxh(*,i))
+
+for i=0,nrd do itxh(*,i)=itxh(*,i)-itxh(nn-1,i)
+
+ixh=xh
+
+qq=10.d0^xx
+for i=0,nrd do ixh(*,i)=ftrap_int(qq(*,i),xh(*,i))
+for i=0,nrd do ixh(*,i)=ixh(*,i)-ixh(nn-1,i)
+
+xr=10.d0^(terms(jr,*)-terms(jr,0))
+qq=10.d0^terms(0,*)
+
+dxr=xr(1:nn-1)-xr(0:nn-2)
+dqq=qq(1:nn-1)-qq(0:nn-2)
+daks=aks(1:nn-1)-aks(0:nn-2)
+daksss=akss(1:nn-1,*)-akss(0:nn-2,*)
+dxx=xx(1:nn-1,*)-xx(0:nn-2,*)

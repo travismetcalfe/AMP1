@@ -1,0 +1,110 @@
+to compile joergen's code on a different machine.
+
+ svn co https://proxy.subversion.ucar.edu/AMP/  /basedirectory/
+
+I need a tarfile with my auxiliary files: aux.tar
+  aux.tar contains:
+Makefile.oc
+evalmodel_oc.f
+gridmin_oc.f
+lmmin_oc.f
+mrqdata_amp.f
+mrqmin_oc.f
+myflush.csh
+obs.dat
+readme_olc_amp
+runtest_oc.f
+singvd_oc.f
+test
+
+
+
+svn the files
+
+
+make sure link "  ln -s g77path  f77	 "
+make sure "." is in path in .cshrc file
+
+	cd prg
+	./setups -P dble -C mpif77 
+	OR if I don't have mpif77 and just f77, do this
+	./setups -P dble 
+
+add the paths to the .cshrc file according to the instructions
+
+	(make clean --- if want to start again)
+
+
+back to prg directory and make the programs	
+	cat Makefile.stub >> Makefile
+
+
+Open ff_amp.f, line 666 comment "eprgdir = ...." and 
+	      uncomment "call getenv..."
+Set idif = 0 or 1 at beginning of program
+
+	make testffamp1
+	make testffamp
+
+      
+
+When it finishes compiling (with warnings) then set up the base files
+
+	cd ../testcz_prototype
+	ln -s emdl.rho.0100.Z2.01.s.0.LE emdl.rho.0100.Z2.01.s.0
+	ln -s emdl.LE emdl
+
+Test it:
+
+	../testffamp1 1.0 0.02 0.27 1.91 1e+9
+
+
+;test MY front of the stuff
+
+;       All of the OC fortran stuff;
+	cd ..
+	tar -xvf aux_amp.tar 
+
+	
+	cd aux/
+	cp gridmin_oc.f ../prg/
+	cp lmmin_oc.f ../prg/
+	cp mrqmin_oc.f ../prg/
+	cp runtest_oc.f ../prg/
+	cp singvd_oc.f ../prg/
+	cp evalmodel_oc.f ../prg/
+	cp obs.dat* ../testcz_prototype/
+	cp test ../testcz_prototype/
+ 	cp mrqdata_amp.f ../prg/
+	cp test ../testcz_prototype/
+	cp myflush.csh ../testcz_prototype/
+	cp Makefile.stub.oc ../prg/	
+	cp param.log* ../testcz_prototype/
+
+
+; specific for my versions of func, mrqm and grmm and test with bison data
+
+	cd ../prg/
+	cat Makefile.stub.oc >> Makefile
+	make func
+	make mrqm
+	make grmm
+
+	cd ../testcz_prototype
+	touch model2
+	touch orlagh.log
+	cp obs.dat.bison obs.dat
+	cp param.log.bison param.log
+
+	func 0.9900 0.01845 0.2750 1.98 .4227382853564987E+10
+
+	mrqm 0.9900 0.01845 0.2750 1.98 .4227382853564987E+10
+
+	grmm 0.9900 0.01845 0.2750 1.98 .4227382853564987E+10
+
+
+NOTE!!!!!!! 
+	    at the moment ff_amp is set to just fit M and Z, so this
+	; needs to be changed in mrqdata_amp.f
+	;
+

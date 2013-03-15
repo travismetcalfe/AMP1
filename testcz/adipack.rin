@@ -1,0 +1,14 @@
+**** Note: imixcr changed from 2 to 12, 4/3/03
+
+Input files for redistrb and adipls
+
+#in_rdist  @
+#in_adi  @
+
+amdl file
+
+'#amdl'   @
+
+rotation file
+
+omega_input_1.dat  @

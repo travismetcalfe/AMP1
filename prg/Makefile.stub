@@ -1,0 +1,59 @@
+MPIF77      = mpif77
+MPIFFLAGS   = -O5 -w -qarch=440 -qmaxmem=64000 -qextname=flush -qextname=fdate
+
+# TSM - 07/13/2007 ###########################################################
+
+FFOAM.DCZ = \
+ff_amp.o \
+setups_main.dcz.d.o \
+setups_package.cz.d.o \
+set_modagez.cz.d.o \
+trial_gridz.cz.d.o \
+evolmain.dcz.d.o \
+dump_csum.cz.d.o \
+evolrhs.bz.d.o \
+evolrhs.dbz.d.o \
+evolbcs.bz.d.o \
+evolbcs.dbz.d.o \
+cpydif.dbz.d.o \
+stdifv.dbz.d.o \
+difcff.dbz.d.o \
+difcft.dn.d.o \
+difcfu.dn.d.o \
+smdifx.dbz.d.o \
+incomp.dbz.d.o
+
+testffamp: $(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) lofiles.c auxprg adi oplib11
+	$(FC) $(FFLAGS) -o ../testffamp testff.f \
+	$(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR11)/libopint.a
+
+testffamp1: $(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) lofiles.c auxprg adi oplib11
+	$(FC) $(FFLAGS) -o ../testffamp1 testff0.f \
+	$(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) \
+	$(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o $(AOFILES.C) \
+	$(OPDIR11)/libopint.a
+
+# TSM - 08/15/2005 ###########################################################
+
+mpi_pikaia.o: mpi_pikaia.f
+	$(MPIF77) $(MPIFFLAGS) -c mpi_pikaia.f
+
+pikaia_master.o: pikaia_master.f
+	$(MPIF77) $(MPIFFLAGS) -c pikaia_master.f
+
+mpi_fitness.o: mpi_fitness.f
+	$(MPIF77) $(MPIFFLAGS) -c mpi_fitness.f
+
+ff_slave.o: ff_slave.f
+	$(MPIF77) $(MPIFFLAGS) -c ff_slave.f
+
+ff_amp.o: ff_amp.f 
+	$(FC) $(FFLAGS) -c ff_amp.f 
+
+pikaia_amp: mpi_pikaia.o pikaia_master.o mpi_fitness.o ff_slave.o $(FFOAM.DCZ) $(CO.CZ) $(LIV05-PHYS.BZ) lofiles.c auxprg adi oplib11
+	$(MPIF77) $(MPIFFLAGS) -o ../pikaia_amp mpi_pikaia.o \
+	pikaia_master.o mpi_fitness.o ff_slave.o $(FFOAM.DCZ) $(CO.CZ) \
+	$(LIV05-PHYS.BZ) $(LO.C) $(LOA) $(AUX)/adisr/srdist.c.d.o  \
+	$(AOFILES.C) $(OPDIR11)/libopint.a
