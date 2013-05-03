@@ -448,7 +448,7 @@ c
 c
 cRESTART declarations
       integer sgen, par, npar, pop, npop
-      real mrate
+      real mrate, bestpar(NMAX), bestfit
       logical file_exists, restarted
 c
 c     User-supplied uniform random number generator
@@ -485,6 +485,7 @@ c     Make sure locally-dimensioned arrays are big enough
 c
 cRESTART if restart file exists, read in and jump below
 c
+      sgen=ngen
       inquire(file='restart.dump',exist=file_exists)
       if (file_exists) then
          restarted=.TRUE.
@@ -501,6 +502,15 @@ c
             do par=1,npar
                oldph(par,pop)=newph(par,pop)
 	    enddo
+            if (jfit(pop).eq.1) then
+               do par=1,npar
+                  bestpar(par)=newph(par,pop)
+               enddo
+               bestfit=fitns(pop)
+               write(*,'("S",4(1X,F4.2))') bestpar(1),bestpar(2),
+     +          bestpar(3),bestpar(4)
+               write(*,'("S fitns(",I3.3,")=",E13.7)') pop,bestfit
+            endif
 	 enddo
          close(55)
          goto 22
@@ -569,6 +579,24 @@ c        if running full generational replacement: swap populations
          if (irep.eq.1)
      +      call newpop(ff,ielite,NMAX,n,np,oldph,newph,
      +         ifit,jfit,fitns,newtot)
+c
+cRESTART restore bestfit from before restart and rerank
+c
+         if (ig.eq.sgen+1) then
+            do pop=1,npop
+               if (jfit(pop).eq.126) then
+                  do par=1,npar
+                     oldph(par,pop)=bestpar(par)
+                     newph(par,pop)=bestpar(par)
+                  enddo
+                  fitns(pop)=bestfit
+                  write(*,'("R",4(1X,F4.2))') bestpar(1),bestpar(2),
+     +             bestpar(3),bestpar(4)
+                  write(*,'("R fitns(",I3.3,")=",E13.7)') pop,bestfit
+               endif
+            enddo
+            call rnkpop(np,fitns,ifit,jfit)
+         endif
 c
 cRESTART write restart file
 c

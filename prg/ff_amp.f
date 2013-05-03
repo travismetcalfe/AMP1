@@ -7,7 +7,7 @@ c
       implicit double precision (a-h,o-z)
 
       integer npar,myid,ell(100),obs,calc,high,low,match(100),tstep
-      integer n(100),peak,gap
+      integer n(100),peak,gap,nn,nmin,nmax,num_rat,num_r02
       double precision data(36),freq(100),spacing(400),err(100),target
       double precision step,log_z,avg_sys(5),Tresid,Lresid,ominusc
       double precision Teff,L_Lo,T_obs,L_obs,Terr,Lerr,offset(400)
@@ -15,6 +15,13 @@ c
       double precision mixed(100),nu,rnu,lowf,highf,lowI,highI
       double precision rinertia,inertia,G_obs,Gerr,logG,Gresid
       double precision M_obs,Merr,M_H,Mresid,Dnu_in
+      double precision nu_calc(100,5),nu_obs(100,5),nu_err(100,5)
+      double precision Dnu0_calc(100),Dnu0_obs(100),Dnu0_err(100)
+      double precision Dnu1_calc(100),Dnu1_obs(100),Dnu1_err(100)
+      double precision d02_calc(100),d02_obs(100),d02_err(100)
+      double precision d01_calc,d01_obs,d01_err,d10_calc,d10_obs,d10_err
+      double precision r01_calc,r01_obs,r01_err,r10_calc,r10_obs,r10_err
+      double precision r02_calc,r02_obs,r02_err,chisq_rat,chisq_r02
 
       logical isnan, quiet
       real userff
@@ -88,13 +95,15 @@ c
       isflag=1
       idif=1
       Dnu_in=0.0
+      iovs=0
+      a_ovs=0.0
       if (myid .gt. 0) then
 c
 c  read obs.dat file
 c
          nonseis=0
          open(55,file='obs.dat',status='old')
-         read(55,*) num_obs,iwflag,isflag,idif,Dnu_in
+         read(55,*) num_obs,iwflag,isflag,idif,Dnu_in,iovs,a_ovs
          do obs=1,num_obs+5
             read(55,*,end=50) col1str,freq(obs),err(obs)
             if (col1str .eq. "T") then
@@ -268,7 +277,7 @@ c
 c
 c  create input files
 c
-      call write_evol(myid,idif)
+      call write_evol(myid,idif,iovs,a_ovs)
       call write_rdist(myid)
       call write_adi(myid)
 c
@@ -506,8 +515,8 @@ c
      +             (csum_ind(3,nstep_ind)*csum_ind(3,nstep_ind)))
             M_H = log10(csum_ind(22,nstep_ind)/
      +                  csum_ind(21,nstep_ind))+1.61d0
-            write(55,*) step,xmod_new,Dnu_calc,age,Teff,L_Lo,R_Ro
-            call flush(55)
+c            write(55,*) step,xmod_new,Dnu_calc,age,Teff,L_Lo,R_Ro
+c            call flush(55)
 
          enddo
 
@@ -516,8 +525,9 @@ c
       write(55,'("params: ",F6.4,1X,F7.5,1X,F6.4,1X,F4.2,1X,E21.16)')
      + par_am,par_z,par_y,par_alfa,age
       write(55,'("suffix: ",A30)') trailer_par
-      write(55,*) "Teff, L_Lo, R_Ro: ",Teff,L_Lo,R_Ro
-      write(55,*) "logG, M_H: ",logG,M_H
+      write(55,'("Teff, L_Lo, R_Ro: ",F7.1,1X,F6.3,1X,F6.3)') 
+     + Teff,L_Lo,R_Ro
+      write(55,'("logG, M_H: ",F6.3,1X,F7.3)') logG,M_H
       call flush(55)
 c
 c  FINAL INTERPOLATED MODEL
@@ -529,10 +539,10 @@ c
          r = 1./(c1*(fm/f0) - c2*(Dnu_calc/Dnu_obs))
          a0 = ((f0 - fm)*float(num_rnu)) / sum_obs
 
-         write(55,*) "f0, Dnu_obs: ",f0,Dnu_obs
-         write(55,*) "fm, Dnu_calc: ",fm,Dnu_calc
-         write(55,*) " r: ",r
-         write(55,*) "a0: ",a0
+         write(55,'("f0, Dnu_obs: ",F8.3,1X,F7.3)') f0,Dnu_obs
+         write(55,'("fm, Dnu_calc: ",F8.3,1X,F7.3)') fm,Dnu_calc
+         write(55,'(" r: ",F8.6)') r
+         write(55,'("a0: ",F8.4)') a0
          call flush(55)
 c
 c  calculate mode inertia ratio for mixed l=1 modes
@@ -573,7 +583,9 @@ c
          sum_rsq = 0.
          do obs=1,num_obs
             mode = match(obs)
+            nn=obs_st(2,mode)
             l=obs_st(1,mode)
+            ll=l+1
 c
 c  scale surface correction for mixed l=1 modes
 c
@@ -594,21 +606,156 @@ c
             if (iwflag .eq. 0) then
                weight = err(obs)
             else
+c               weight = sqrt(err(obs)*err(obs) + 0.11662225*sys*sys)
                weight = sqrt(err(obs)*err(obs) + 0.25*sys*sys)
             endif
 
             resid = (freq(obs)-fcalc_sys)/weight
-            write(55,*) ell(obs),obs_st(2,mode),freq(obs),
-     +           err(obs),fcalc_sys,sys,resid
+            write(55,'(2(I2,1X),F8.2,1X,F5.2,1X,F8.3,2(1X,F7.3))') 
+     + l,nn,freq(obs),err(obs),fcalc_sys,sys,resid
             call flush(55)
             sum_rsq = sum_rsq + (resid*resid)
+c
+c  populate arrays of matching observed and calculated modes
+c
+            nu_calc(nn,ll)=fcalc_sys
+            nu_obs(nn,ll)=freq(obs)
+            nu_err(nn,ll)=err(obs)
          enddo
 
          chisq_seis = sum_rsq/float(num_obs)
-         sum_rsq=0.
+c
+c  observed and calculated large and small separations
+c
+         nmax=0
+         nmin=100
+         do obs=1,num_obs
+            mode = match(obs)
+            nn=obs_st(2,mode)
+            l=obs_st(1,mode)
+            ll=l+1
+c
+c  calculate Dnu0(n)
+c
+            if (l .eq. 0) then
+               Dnu0_calc(nn) = nu_calc(nn,ll) - nu_calc(nn-1,ll)
+               Dnu0_obs(nn) = nu_obs(nn,ll) - nu_obs(nn-1,ll)
+               Dnu0_err(nn) = SQRT(nu_err(nn,ll)*nu_err(nn,ll) + 
+     +                   nu_err(nn-1,ll)*nu_err(nn-1,ll)) / Dnu0_obs(nn)
+               if (nn .lt. nmin) nmin=nn
+               if (nn .gt. nmax) nmax=nn
+            endif
+c
+c  calculate Dnu1(n)
+c
+            if (l .eq. 1) then
+               Dnu1_calc(nn) = nu_calc(nn,ll) - nu_calc(nn-1,ll)
+               Dnu1_obs(nn) = nu_obs(nn,ll) - nu_obs(nn-1,ll)
+               Dnu1_err(nn) = SQRT(nu_err(nn,ll)*nu_err(nn,ll) + 
+     +                   nu_err(nn-1,ll)*nu_err(nn-1,ll)) / Dnu1_obs(nn)
+            endif
+c
+c  calculate d02(n)
+c
+            if (l .eq. 2) then
+               d02_calc(nn) = nu_calc(nn,ll-2) - nu_calc(nn-1,ll)
+               d02_obs(nn) = nu_obs(nn,ll-2) - nu_obs(nn-1,ll)
+               d02_err(nn) = SQRT(nu_err(nn,ll-2)*nu_err(nn,ll-2) + 
+     +                  nu_err(nn-1,ll)*nu_err(nn-1,ll)) / d02_obs(nn)
+            endif
+
+         enddo
+c
+c  match to frequency ratios r01, r10, r02
+c
+         l0=1
+         l1=2
+         l2=3
+         num_rat=0
+         num_r02=0
+         sum_rsq = 0.
+         sum_r02 = 0.
+         do nn=nmin+1,nmax-1
+c
+c  calculate d01 and r01
+c
+            d01_calc = 0.125*(nu_calc(nn-1,l0)-4*nu_calc(nn-1,l1)+
+     +             6*nu_calc(nn,l0)-4*nu_calc(nn,l1)+nu_calc(nn+1,l0))
+            d01_obs = 0.125*(nu_obs(nn-1,l0)-4*nu_obs(nn-1,l1)+
+     +            6*nu_obs(nn,l0)-4*nu_obs(nn,l1)+nu_obs(nn+1,l0))
+            d01_err = 0.125*SQRT(nu_err(nn-1,l0)*nu_err(nn-1,l0)+
+     +           16*nu_err(nn-1,l1)*nu_err(nn-1,l1)+
+     +           36*nu_err(nn,l0)*nu_err(nn,l0)+
+     +           16*nu_err(nn,l1)*nu_err(nn,l1)+
+     +           nu_err(nn+1,l0)*nu_err(nn+1,l0)) / d01_obs
+
+            r01_calc = d01_calc/Dnu1_calc(nn)
+            r01_obs = d01_obs/Dnu1_obs(nn)
+            r01_err = 3.*r01_obs*SQRT(d01_err*d01_err +
+     +                Dnu1_err(nn)*Dnu1_err(nn))
+            if (r01_obs.gt.0 .and. r01_obs.lt.1) then
+               resid = (r01_obs-r01_calc)/r01_err
+               write(55,'("r01",1X,F7.2,3(1X,F10.8))')
+     + nu_obs(nn,l0),r01_obs,r01_err,r01_calc
+               call flush(55)
+               if (nn .lt. nmax-3) then
+                  num_rat = num_rat + 1
+                  sum_rsq = sum_rsq + (resid*resid)
+               endif
+            endif
+c
+c  calculate d10 and r10
+c
+            d10_calc = -0.125*(nu_calc(nn-1,l1)-4*nu_calc(nn,l0)+
+     +           6*nu_calc(nn,l1)-4*nu_calc(nn+1,l0)+nu_calc(nn+1,l1))
+            d10_obs = -0.125*(nu_obs(nn-1,l1)-4*nu_obs(nn,l0)+
+     +          6*nu_obs(nn,l1)-4*nu_obs(nn+1,l0)+nu_obs(nn+1,l1))
+            d10_err = 0.125*SQRT(nu_err(nn-1,l1)*nu_err(nn-1,l1)+
+     +           16*nu_err(nn,l0)*nu_err(nn,l0)+
+     +           36*nu_err(nn,l1)*nu_err(nn,l1)+
+     +           16*nu_err(nn+1,l0)*nu_err(nn+1,l0)+
+     +           nu_err(nn+1,l1)*nu_err(nn+1,l1)) / d10_obs
+
+            r10_calc = d10_calc/Dnu0_calc(nn+1)
+            r10_obs = d10_obs/Dnu0_obs(nn+1)
+            r10_err = 3.*r10_obs*SQRT(d10_err*d10_err +
+     +                 Dnu0_err(nn+1)*Dnu0_err(nn+1))
+            if (r10_obs.gt.0 .and. r10_obs.lt.1) then
+               resid = (r10_obs-r10_calc)/r10_err
+             write(55,'("r10",1X,F7.2,3(1X,F10.8))')
+     + nu_obs(nn,l1),r10_obs,r10_err,r10_calc
+               call flush(55)
+               if (nn .lt. nmax-3) then
+                  num_rat = num_rat + 1
+                  sum_rsq = sum_rsq + (resid*resid)
+               endif
+            endif
+c
+c  calculate r02
+c
+            r02_calc = d02_calc(nn)/Dnu1_calc(nn)
+            r02_obs = d02_obs(nn)/Dnu1_obs(nn)
+            r02_err = r02_obs*SQRT(d02_err(nn)*d02_err(nn) +
+     +                Dnu1_err(nn)*Dnu1_err(nn))
+            if (r02_obs.gt.0 .and. r02_obs.lt.1) then
+               resid = (r02_obs-r02_calc)/r02_err
+               write(55,'("r02",1X,F7.2,3(1X,F10.8))')
+     + nu_obs(nn,l0),r02_obs,r02_err,r02_calc
+               call flush(55)
+               if (nn .lt. nmax-3) then
+                  num_r02 = num_r02 + 1
+                  sum_r02 = sum_r02 + (resid*resid)
+               endif
+            endif
+
+         enddo
+
+         chisq_rat = sum_rsq/float(num_rat)
+         chisq_r02 = sum_r02/float(num_r02)
 c
 c  add residuals from Teff, L_Lo, and R_Ro
 c
+         sum_rsq=0.
          do obs=num_obs+1,num_obs+5
             if (ell(obs) .eq. 5) then
                Tresid = (T_obs - Teff)/Terr
@@ -635,11 +782,14 @@ c
 c  obs: nu's + L + T | par: M + Z + Y + a + t
 c
          chisq_spec = sum_rsq/float(nonseis)
-         write(55,'("chisq(seis,spec): ",F6.2,2X,F6.2)')
-     +            chisq_seis,chisq_spec
+         write(55,'("chisq(seis,r010,r02,spec): ",4(2X,F7.3))')
+     +            chisq_seis,chisq_rat,chisq_r02,chisq_spec
          call flush(55)
-         chisq_r = 0.66666667*chisq_seis + 0.33333333*chisq_spec
-c         chisq_r = sum_rsq/float(num_obs+nonseis-5)
+         if (iwflag .eq. 2) then
+            chisq_r = 0.25*(chisq_seis+chisq_rat+chisq_r02+chisq_spec)
+         else
+            chisq_r = 0.66666667*chisq_seis + 0.33333333*chisq_spec
+         endif
 
       endif
 
@@ -661,7 +811,7 @@ c         chisq_r = sum_rsq/float(num_obs+nonseis-5)
       end
 
 ***************************************************************************
-      subroutine write_evol(myid,idif)
+      subroutine write_evol(myid,idif,iovs,a_ovs)
 
       implicit double precision (a-h, o-z)
       integer length
@@ -690,8 +840,11 @@ c         chisq_r = sum_rsq/float(num_obs+nonseis-5)
       write(55,'(A)') "12 'Z.proffitt'"
 c should work on Kraken
       call getenv("EPRGDIR",eprgdir)
-c fallback for Frost
-      if (length(eprgdir).eq.0) eprgdir="/home/gridamp/evolpack"
+c fallback for Kraken
+      if (length(eprgdir).eq.0) 
+     + eprgdir="/lustre/scratch/proj/gridamp/evolpack"
+c 3    format("13 '",a,"/opac/ghwd-v11.gn93_ax94'")
+c     A&F94 (above), Ferg05 (below)
  3    format("13 '",a,"/opac/ghwd-v11.gn93_ax05'")
       write(55,3) eprgdir(1:length(eprgdir))
       write(55,'(A)') "14 'hvabund.g91'"
@@ -727,11 +880,15 @@ c fallback for Frost
       write(55,4) eprgdir(1:length(eprgdir))
       write(55,'(A)') "0.02"
 
-      write(55,'(A)') 
+      if (iovs.eq.0) then 
+         write(55,'(A)') 
      + " dsn.mod.tri.eos.opa.eng.rot.dif.bcs.con.int.msh.tst.out.dgn"
 c include overshoot (below)
-c     +" dsn.mod.tri.eos.opa.eng.ovs.rot.dif.bcs.con.int.msh.tst.out.dgn"
-c
+      elseif (iovs.eq.1) then 
+         write(55,'(A)')
+     +" dsn.mod.tri.eos.opa.eng.ovs.rot.dif.bcs.con.int.msh.tst.out.dgn"
+      endif
+
 c                  istcon istart
       write(55,'(A)') " 0 1"
       write(55,'(A)') ",,,,,,,,,,,,,,,,,,,,,,,,,,,,"
@@ -760,6 +917,8 @@ c                       #X
       write(55,'(A)') " 8.0019 -8.0 6.0 -5.0 13 ,4,,"
       write(55,'(A)') " 0 .0 6.3019 .3001 5.0,,"
       write(55,'(A)') " 0 0 .0 1.0 2.00E-02"
+c      write(55,'(A)') " .2490 1 1.0 2 5.000E+07 1 6 0    Model S"
+c BP95 rates (above), NACRE rates (below)
       write(55,'(A)') " .2490 1 1.0 2 5.000E+07 1 8 0    Model S"
       write(55,'(A)') " ,,,,0.51537,,,,,,,,,,"
       write(55,'(A)') " ,,,,,,,,,,,,,,,,,,"
@@ -770,14 +929,17 @@ c              #alpha
 c                       imixcr
       write(55,'(A)') " 1000112,,,,,,,,,,,,,,"
 c include overshoot
-c      write(55,'(A)') " ,,,,,,,,,,,,,,,,,,,,,,,,"
-c                           #alpha_ov
-c      write(55,'(A)') " ,1,,0.25"
+      if (iovs.eq.1) then
+      write(55,'(A)') " ,,,,,,,,,,,,,,,,,,,,,,,,"
+c                      #alpha_ov
+ 9    format(1x,",1,,",f4.2)
+      write(55,9) a_ovs
+      endif
 c                          #v_rot
       write(55,'(A)') " 0, 2.e5"
 c             #idif (0=off, 1=He, 2=He+Z)
- 9    format(1x,i1,1x,"0,,,2000.,,,,,,,,,,,,,,,,,,,,,,,,")
-      write(55,9) idif
+ 10   format(1x,i1,1x,"0,,,2000.,,,,,,,,,,,,,,,,,,,,,,,,")
+      write(55,10) idif
 c                     #ismdif
       write(55,'(A)') " 0,,,,,,,,,,"
       write(55,'(A)') ".5000 .5000 .5000 0.5 1.000 0.5,,,,,,,,,,,,,"
