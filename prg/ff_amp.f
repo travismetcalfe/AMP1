@@ -14,7 +14,7 @@ c
       double precision R_Ro,Rerr,Rresid,n0,sum_n,sum_top,sum_bot
       double precision mixed(100),nu,rnu,lowf,highf,lowI,highI
       double precision rinertia,inertia,G_obs,Gerr,logG,Gresid
-      double precision M_obs,Merr,M_H,Mresid,Dnu_in
+      double precision M_obs,Merr,M_H,Mresid,Dnu_in,penalty
       double precision nu_calc(100,5),nu_obs(100,5),nu_err(100,5)
       double precision Dnu0_calc(100),Dnu0_obs(100),Dnu0_err(100)
       double precision Dnu1_calc(100),Dnu1_obs(100),Dnu1_err(100)
@@ -605,8 +605,9 @@ c  weight the fit (or not)
 c
             if (iwflag .eq. 0) then
                weight = err(obs)
+            elseif (iwflag .eq. 4) then
+               weight = sqrt(err(obs)*err(obs) + 0.11662225*sys*sys)
             else
-c               weight = sqrt(err(obs)*err(obs) + 0.11662225*sys*sys)
                weight = sqrt(err(obs)*err(obs) + 0.25*sys*sys)
             endif
 
@@ -654,16 +655,6 @@ c
                Dnu1_err(nn) = SQRT(nu_err(nn,ll)*nu_err(nn,ll) + 
      +                   nu_err(nn-1,ll)*nu_err(nn-1,ll)) / Dnu1_obs(nn)
             endif
-c
-c  calculate d02(n)
-c
-            if (l .eq. 2) then
-               d02_calc(nn) = nu_calc(nn,ll-2) - nu_calc(nn-1,ll)
-               d02_obs(nn) = nu_obs(nn,ll-2) - nu_obs(nn-1,ll)
-               d02_err(nn) = SQRT(nu_err(nn,ll-2)*nu_err(nn,ll-2) + 
-     +                  nu_err(nn-1,ll)*nu_err(nn-1,ll)) / d02_obs(nn)
-            endif
-
          enddo
 c
 c  match to frequency ratios r01, r10, r02
@@ -731,8 +722,12 @@ c
                endif
             endif
 c
-c  calculate r02
+c  calculate d02 and r02
 c
+            d02_calc(nn) = nu_calc(nn,l0) - nu_calc(nn-1,l2)
+            d02_obs(nn) = nu_obs(nn,l0) - nu_obs(nn-1,l2)
+            d02_err(nn) = SQRT(nu_err(nn,l0)*nu_err(nn,l0) + 
+     +           nu_err(nn-1,l2)*nu_err(nn-1,l2)) / d02_obs(nn)
             r02_calc = d02_calc(nn)/Dnu1_calc(nn)
             r02_obs = d02_obs(nn)/Dnu1_obs(nn)
             r02_err = r02_obs*SQRT(d02_err(nn)*d02_err(nn) +
@@ -782,10 +777,17 @@ c
 c  obs: nu's + L + T | par: M + Z + Y + a + t
 c
          chisq_spec = sum_rsq/float(nonseis)
+         if (par_y .lt. 0.248) then
+            penalty = 100.*(0.248-par_y)
+c         penalty = 100.*(par_xxh-0.752 + 2.4*par_z)
+            chisq_spec = chisq_spec + penalty*penalty
+         endif
          write(55,'("chisq(seis,r010,r02,spec): ",4(2X,F7.3))')
      +            chisq_seis,chisq_rat,chisq_r02,chisq_spec
          call flush(55)
-         if (iwflag .eq. 2) then
+         if (iwflag .eq. 3) then
+            chisq_r = (chisq_seis+chisq_rat+chisq_spec)/3.
+         elseif (iwflag .eq. 2) then
             chisq_r = 0.25*(chisq_seis+chisq_rat+chisq_r02+chisq_spec)
          else
             chisq_r = 0.66666667*chisq_seis + 0.33333333*chisq_spec
