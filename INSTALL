@@ -3,7 +3,7 @@
 ============================================================
 
 1. Copy source code repository to user home directory:
-   svn co https://proxy.subversion.ucar.edu/AMP/ ~/evolpack
+   svn co https://svn.nfit.au.dk/svn/AMP/ ~/evolpack
 
 2. Setup makefiles for your compiler and flags:
    cd ~/evolpack/prg
