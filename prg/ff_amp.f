@@ -14,7 +14,7 @@ c
       double precision R_Ro,Rerr,Rresid,n0,sum_n,sum_top,sum_bot
       double precision mixed(100),nu,rnu,lowf,highf,lowI,highI
       double precision rinertia,inertia,G_obs,Gerr,logG,Gresid
-      double precision M_obs,Merr,M_H,Mresid,Dnu_in,penalty
+      double precision M_obs,Merr,M_H,Mresid,Dnu_in,penalty,chisq(4)
       double precision nu_calc(100,5),nu_obs(100,5),nu_err(100,5)
       double precision Dnu0_calc(100),Dnu0_obs(100),Dnu0_err(100)
       double precision Dnu1_calc(100),Dnu1_obs(100),Dnu1_err(100)
@@ -81,7 +81,7 @@ c
       common /csum_indiv/ icsum_ind, nstep_ind,
      *  csum_ind(icsum_max, nstep_max) 
       common /verbosity/ quiet
-      common /xmodage/ age
+      common /xmodage/ age,R_Ro,Teff,chisq
 c
 c  common with pulsation RESULTS! (degree, order, frequency, inertia)
 c
@@ -794,6 +794,10 @@ c         penalty = 100.*(par_xxh-0.752 + 2.4*par_z)
          endif
 
       endif
+      chisq(1) = chisq_seis
+      chisq(2) = chisq_rat
+      chisq(3) = chisq_r02
+      chisq(4) = chisq_spec
 
       userff = 1./chisq_r
       if (isnan(userff)) userff=0.0

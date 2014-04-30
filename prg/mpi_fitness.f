@@ -9,7 +9,7 @@ c ---------------------------------------------
       integer ndone, nproc, ierr, nspawn, valuest(8)
       integer msgtype, job, num_jobs, trial, slave
       integer par, npar, status(MPI_STATUS_SIZE)
-      double precision data(32), result, age
+      double precision data(32),result,age,R_Ro,Teff,chisq(4)
       real oldph(32,1024), fitness(1024), youth(1024)
       character*10 datest, timest, zonest
       logical receiving
@@ -64,15 +64,23 @@ c ---------------------------------------------
      +                     msgtype, MPI_COMM_WORLD, status, ierr )
             call mpi_recv( age, 1, MPI_DOUBLE_PRECISION, slave,
      +                     msgtype, MPI_COMM_WORLD, status, ierr )
+            call mpi_recv( R_Ro, 1, MPI_DOUBLE_PRECISION, slave,
+     +                     msgtype, MPI_COMM_WORLD, status, ierr )
+            call mpi_recv( Teff, 1, MPI_DOUBLE_PRECISION, slave,
+     +                     msgtype, MPI_COMM_WORLD, status, ierr )
+            call mpi_recv( chisq, 4, MPI_DOUBLE_PRECISION, slave,
+     +                     msgtype, MPI_COMM_WORLD, status, ierr )
 
             youth(trial) = age
             fitness(trial) = result
             ndone = ndone + 1
 
             call date_and_time(datest, timest, zonest, valuest)
-    9       format(A10,": job",i3.3,4(1x,f4.2),2(1x,e12.6))
+    9       format(A10,": job",i3.3,4(1x,f4.2),2(1x,e12.6),
+     +             1x,F5.3,1x,F7.1,4(1x,F7.3))
 	    write(*,9) timest,trial,oldph(1,trial),oldph(2,trial),
-     +        oldph(3,trial),oldph(4,trial),fitness(trial),age
+     +        oldph(3,trial),oldph(4,trial),fitness(trial),age,
+     +        R_Ro,Teff,chisq(1),chisq(2),chisq(3),chisq(4)
 
 c ---------------------------------------------
 c     send new job to responding node
