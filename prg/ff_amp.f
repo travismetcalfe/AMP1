@@ -792,6 +792,12 @@ c         penalty = 100.*(par_xxh-0.752 + 2.4*par_z)
          else
             chisq_r = 0.66666667*chisq_seis + 0.33333333*chisq_spec
          endif
+         if (isflag .eq. 0) then
+            anchor = (freq(1) - obs_st(3,match(1)))**2/2.d0**2
+            chisq_r = chisq_rat*float(num_rat) + chisq_spec*nonseis + 
+     +                chisq_r02*float(num_r02) + anchor
+            chisq_r = chisq_r/(num_rat+num_r02+nonseis+1 - 5) 
+         endif
 
       endif
       chisq(1) = chisq_seis
@@ -844,11 +850,11 @@ c         penalty = 100.*(par_xxh-0.752 + 2.4*par_z)
  2    format("3 'emdl/emdl.d",i3.3,"'")
       write(55,2) myid
       write(55,'(A)') "12 'Z.proffitt'"
-c should work on Kraken
+c should work on Stampede
       call getenv("EPRGDIR",eprgdir)
-c fallback for Kraken
+c fallback for Stampede
       if (length(eprgdir).eq.0) 
-     + eprgdir="/lustre/scratch/proj/gridamp/evolpack"
+     + eprgdir="/work/01038/gridamp/evolpack"
 c 3    format("13 '",a,"/opac/ghwd-v11.gn93_ax94'")
 c     A&F94 (above), Ferg05 (below)
  3    format("13 '",a,"/opac/ghwd-v11.gn93_ax05'")
