@@ -682,14 +682,14 @@ c
 
             r01_calc = d01_calc/Dnu1_calc(nn)
             r01_obs = d01_obs/Dnu1_obs(nn)
-            r01_err = 3.*r01_obs*SQRT(d01_err*d01_err +
+            r01_err = r01_obs*SQRT(d01_err*d01_err +
      +                Dnu1_err(nn)*Dnu1_err(nn))
             if (r01_obs.gt.0 .and. r01_obs.lt.1) then
                resid = (r01_obs-r01_calc)/r01_err
                write(55,'("r01",1X,F7.2,3(1X,F10.8))')
      + nu_obs(nn,l0),r01_obs,r01_err,r01_calc
                call flush(55)
-               if (nn .lt. nmax-3) then
+               if (nn .lt. nmax) then
                   num_rat = num_rat + 1
                   sum_rsq = sum_rsq + (resid*resid)
                endif
@@ -709,14 +709,14 @@ c
 
             r10_calc = d10_calc/Dnu0_calc(nn+1)
             r10_obs = d10_obs/Dnu0_obs(nn+1)
-            r10_err = 3.*r10_obs*SQRT(d10_err*d10_err +
+            r10_err = r10_obs*SQRT(d10_err*d10_err +
      +                 Dnu0_err(nn+1)*Dnu0_err(nn+1))
             if (r10_obs.gt.0 .and. r10_obs.lt.1) then
                resid = (r10_obs-r10_calc)/r10_err
              write(55,'("r10",1X,F7.2,3(1X,F10.8))')
      + nu_obs(nn,l1),r10_obs,r10_err,r10_calc
                call flush(55)
-               if (nn .lt. nmax-3) then
+               if (nn .lt. nmax) then
                   num_rat = num_rat + 1
                   sum_rsq = sum_rsq + (resid*resid)
                endif
@@ -737,7 +737,7 @@ c
                write(55,'("r02",1X,F7.2,3(1X,F10.8))')
      + nu_obs(nn,l0),r02_obs,r02_err,r02_calc
                call flush(55)
-               if (nn .lt. nmax-3) then
+               if (nn .lt. nmax) then
                   num_r02 = num_r02 + 1
                   sum_r02 = sum_r02 + (resid*resid)
                endif
