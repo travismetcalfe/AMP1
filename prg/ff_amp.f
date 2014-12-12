@@ -19,9 +19,11 @@ c
       double precision Dnu0_calc(100),Dnu0_obs(100),Dnu0_err(100)
       double precision Dnu1_calc(100),Dnu1_obs(100),Dnu1_err(100)
       double precision d02_calc(100),d02_obs(100),d02_err(100)
+      double precision d13_calc(100),d13_obs(100),d13_err(100)
       double precision d01_calc,d01_obs,d01_err,d10_calc,d10_obs,d10_err
       double precision r01_calc,r01_obs,r01_err,r10_calc,r10_obs,r10_err
       double precision r02_calc,r02_obs,r02_err,chisq_rat,chisq_r02
+      double precision r13_calc,r13_obs,r13_err
 
       logical isnan, quiet
       real userff
@@ -657,11 +659,12 @@ c
             endif
          enddo
 c
-c  match to frequency ratios r01, r10, r02
+c  match to frequency ratios r01, r10, r02, r13
 c
          l0=1
          l1=2
          l2=3
+         l3=4
          num_rat=0
          num_r02=0
          sum_rsq = 0.
@@ -736,6 +739,27 @@ c
                resid = (r02_obs-r02_calc)/r02_err
                write(55,'("r02",1X,F7.2,3(1X,F10.8))')
      + nu_obs(nn,l0),r02_obs,r02_err,r02_calc
+               call flush(55)
+               if (nn .lt. nmax) then
+                  num_r02 = num_r02 + 1
+                  sum_r02 = sum_r02 + (resid*resid)
+               endif
+            endif
+c
+c  calculate d13 and r13
+c
+            d13_calc(nn) = nu_calc(nn,l1) - nu_calc(nn-1,l3)
+            d13_obs(nn) = nu_obs(nn,l1) - nu_obs(nn-1,l3)
+            d13_err(nn) = SQRT(nu_err(nn,l1)*nu_err(nn,l1) + 
+     +           nu_err(nn-1,l3)*nu_err(nn-1,l3)) / d13_obs(nn)
+            r13_calc = d13_calc(nn)/Dnu0_calc(nn+1)
+            r13_obs = d13_obs(nn)/Dnu0_obs(nn+1)
+            r13_err = r13_obs*SQRT(d13_err(nn)*d13_err(nn) +
+     +                Dnu0_err(nn+1)*Dnu0_err(nn+1))
+            if (r13_obs.gt.0 .and. r13_obs.lt.1) then
+               resid = (r13_obs-r13_calc)/r13_err
+               write(55,'("r13",1X,F7.2,3(1X,F10.8))')
+     + nu_obs(nn,l1),r13_obs,r13_err,r13_calc
                call flush(55)
                if (nn .lt. nmax) then
                   num_r02 = num_r02 + 1
