@@ -9,7 +9,8 @@ c ---------------------------------------------
       integer ndone, nproc, ierr, nspawn, valuest(8)
       integer msgtype, job, num_jobs, trial, slave
       integer par, npar, status(MPI_STATUS_SIZE)
-      double precision data(32),result,age,R_Ro,Teff,chisq(4)
+      double precision data(32),result,age
+      double precision R_Ro,L_Lo,Teff,M_H,chisq(4)
       real oldph(32,1024), fitness(1024), youth(1024)
       character*10 datest, timest, zonest
       logical receiving

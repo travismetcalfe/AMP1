@@ -8,7 +8,8 @@ c ---------------------------------------------
 
       integer myid, ierr, status(MPI_STATUS_SIZE)
       integer master, msgtype, trial, n, i
-      double precision data(32),result,age,R_Ro,Teff,chisq(4)
+      double precision data(32),result,age
+      double precision R_Ro,L_Lo,Teff,M_H,chisq(4)
       real userff
       logical quiet
       common /verbosity/ quiet
