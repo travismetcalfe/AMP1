@@ -12,7 +12,7 @@ c ---------------------------------------------
       real userff
       logical quiet
       common /verbosity/ quiet
-      common /xmodage/ age,R_Ro,Teff,chisq
+      common /xmodage/ age,R_Ro,L_Lo,Teff,M_H,chisq
 
       external userff
       quiet = .TRUE.
@@ -61,7 +61,11 @@ c ---------------------------------------------
      +       master, msgtype, MPI_COMM_WORLD, ierr )
       call mpi_send( R_Ro, 1, MPI_DOUBLE_PRECISION, 
      +       master, msgtype, MPI_COMM_WORLD, ierr )
+      call mpi_send( L_Lo, 1, MPI_DOUBLE_PRECISION, 
+     +       master, msgtype, MPI_COMM_WORLD, ierr )
       call mpi_send( Teff, 1, MPI_DOUBLE_PRECISION, 
+     +       master, msgtype, MPI_COMM_WORLD, ierr )
+      call mpi_send( M_H, 1, MPI_DOUBLE_PRECISION, 
      +       master, msgtype, MPI_COMM_WORLD, ierr )
       call mpi_send( chisq, 4, MPI_DOUBLE_PRECISION, 
      +       master, msgtype, MPI_COMM_WORLD, ierr )

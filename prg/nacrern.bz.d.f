@@ -71,7 +71,10 @@ c
         s(4,3)=-6.60e-3
         s(4,4)=3.12e-4
 c
-        a(5)=4.83e7
+c 14N+p scaled down using S-value from Angulo et al (2005)
+c       a(5)=4.83e7 ! Angulo et al (1999)
+c       a(5)=2.51e7 ! Adelberger et al (2011)
+        a(5)=2.57e7
         b(5)=15.231
         s(5,1)=-2.00
         s(5,2)=3.41

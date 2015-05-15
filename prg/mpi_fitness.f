@@ -66,7 +66,11 @@ c ---------------------------------------------
      +                     msgtype, MPI_COMM_WORLD, status, ierr )
             call mpi_recv( R_Ro, 1, MPI_DOUBLE_PRECISION, slave,
      +                     msgtype, MPI_COMM_WORLD, status, ierr )
+            call mpi_recv( L_Lo, 1, MPI_DOUBLE_PRECISION, slave,
+     +                     msgtype, MPI_COMM_WORLD, status, ierr )
             call mpi_recv( Teff, 1, MPI_DOUBLE_PRECISION, slave,
+     +                     msgtype, MPI_COMM_WORLD, status, ierr )
+            call mpi_recv( M_H, 1, MPI_DOUBLE_PRECISION, slave,
      +                     msgtype, MPI_COMM_WORLD, status, ierr )
             call mpi_recv( chisq, 4, MPI_DOUBLE_PRECISION, slave,
      +                     msgtype, MPI_COMM_WORLD, status, ierr )
@@ -77,10 +81,10 @@ c ---------------------------------------------
 
             call date_and_time(datest, timest, zonest, valuest)
     9       format(A10,": job",i3.3,4(1x,f4.2),2(1x,e12.6),
-     +             1x,F5.3,1x,F7.1,4(1x,F7.3))
+     +             1x,F5.3,1x,F6.3,1x,F7.1,1x,F6.3,4(1x,F7.3))
 	    write(*,9) timest,trial,oldph(1,trial),oldph(2,trial),
      +        oldph(3,trial),oldph(4,trial),fitness(trial),age,
-     +        R_Ro,Teff,chisq(1),chisq(2),chisq(3),chisq(4)
+     +        R_Ro,L_Lo,Teff,M_H,chisq(1),chisq(2),chisq(3),chisq(4)
 
 c ---------------------------------------------
 c     send new job to responding node
