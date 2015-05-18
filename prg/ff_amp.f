@@ -158,7 +158,7 @@ c
       common /csum_indiv/ icsum_ind, nstep_ind,
      *  csum_ind(icsum_max, nstep_max) 
       common /verbosity/ quiet
-      common /xmodage/ age,R_Ro,L_Lo,Teff,M_H,chisq
+      common /xmodage/ age,R_Ro,Teff,M_H,chisq
 c
 c  common with pulsation RESULTS! (degree, order, frequency, inertia)
 c
