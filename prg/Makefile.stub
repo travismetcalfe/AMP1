@@ -1,5 +1,5 @@
 MPIF77      = mpif77
-MPIFFLAGS   = -O5 -w -qarch=440 -qmaxmem=64000 -qextname=flush -qextname=fdate
+MPIFFLAGS   = -O2
 
 # TSM - 07/13/2007 ###########################################################
 
