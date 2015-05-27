@@ -1017,7 +1017,7 @@ c should work on Stampede
       call getenv("EPRGDIR",eprgdir)
 c fallback for Stampede
       if (length(eprgdir).eq.0) 
-     + eprgdir="/work/01038/gridamp/evolpack"
+     + eprgdir="/work/01038/gridamp/evolpack.stampede"
 c 3    format("13 '",a,"/opac/ghwd-v11.gn93_ax94'")
 c     A&F94 (above), Ferg05 (below)
  3    format("13 '",a,"/opac/ghwd-v11.gn93_ax05'")
