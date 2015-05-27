@@ -1186,7 +1186,7 @@ c                                nit
          write(55,'(A)') "31 '0'"
          write(55,'(A)') "35 '0'"
       else
-         write(55,'(A)') "4 'amdl/amde'"
+c         write(55,'(A)') "4 'amdl/amde'"
          write(55,'(A)') "39 'ttt/ttt.adipls.prt'"
          write(55,'(A)') "32 'osc/rotker'"
          write(55,'(A)') "31 'osc/agsm'"
@@ -1195,7 +1195,9 @@ c                                nit
 
       write(55,'(A)') "-1 ''"
       write(55,'(A)') "dsn.mod.osc.cst.int.out"
-      write(55,'(A)') "31,35,4,0,,,,,,,,,,,,,,,,,,"
+      write(55,'(A)') "31,35,,0,,,,,,,,,,,,,,,,,,"
+c specify logical unit for eigenfunctions (below)
+c      write(55,'(A)') "31,35,4,0,,,,,,,,,,,,,,,,,,"
       write(55,'(A)') ",,,,,,,"
       write(55,'(A)') ",,,,,,,,,,,,,,,,,,,,,,"
       write(55,'(A)') "   ,4,0,1,,,,,,,"
@@ -1208,7 +1210,9 @@ c                                nit
       write(55,'(A)') "1,1,0.99,,,,15,,,,,,,,,,"
       write(55,'(A)') ",,,,,-1,,,,,,,,,,,,,,"
       write(55,'(A)') "39,10,,12,,,,,,,,,"
-      write(55,'(A)') "1,,,,3,,,,,,,,,,,"
+      write(55,'(A)') "1,,,,,,,,,,,,,,,"
+c output eignefunctions (below)
+c      write(55,'(A)') "1,,,,3,,,,,,,,,,,"
       write(55,'(A)') "11,,,,,,,,,,"
       write(55,'(A)') "10010,,,,,-5000,100,,,,,,,,,,,,,,,,,,,,,,,,"
 
