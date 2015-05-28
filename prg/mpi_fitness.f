@@ -44,6 +44,7 @@ c ---------------------------------------------
       write(*,*)
       call date_and_time(datest, timest, zonest, valuest)
       write(*,'(A10,": started job000")') timest
+      timest = 'PARAMETERS'
 
       do job=1,num_jobs
 c ---------------------------------------------
@@ -78,7 +79,8 @@ c ---------------------------------------------
             fitness(trial) = result
             ndone = ndone + 1
 
-            call date_and_time(datest, timest, zonest, valuest)
+c remove system call to improve performance
+c            call date_and_time(datest, timest, zonest, valuest)
     9       format(A10,": job",i3.3,4(1x,f4.2),2(1x,e12.6),
      +             1x,F5.3,1x,F7.1,1x,F6.3,4(1x,F7.3))
 	    write(*,9) timest,trial,oldph(1,trial),oldph(2,trial),
