@@ -187,13 +187,13 @@ rm tmp_dir$$
 
 
 if($endian == "big_endian") then
-  ln -s ../testcz_prototype/emdl.BE ../testcz_prototype/emdl
-  ln -s ../testcz_prototype/emdl.rho.0100.Z2.01.s.0.BE ../testcz_prototype/emdl.rho.0100.Z2.01.s.0
-  rm -rf ../testcz_prototype/emdl.LE ../testcz_prototype/emdl.rho.0100.Z2.01.s.0.LE
+  ln -s ../testcz0/emdl.BE ../testcz0/emdl
+  ln -s ../testcz0/emdl.rho.0100.Z2.01.s.0.BE ../testcz0/emdl.rho.0100.Z2.01.s.0
+  rm -rf ../testcz0/emdl.LE ../testcz0/emdl.rho.0100.Z2.01.s.0.LE
 else
-  ln -s ../testcz_prototype/emdl.LE ../testcz_prototype/emdl
-  ln -s ../testcz_prototype/emdl.rho.0100.Z2.01.s.0.LE ../testcz_prototype/emdl.rho.0100.Z2.01.s.0
-  rm -rf ../testcz_prototype/emdl.BE ../testcz_prototype/emdl.rho.0100.Z2.01.s.0.BE
+  ln -s ../testcz0/emdl.LE ../testcz0/emdl
+  ln -s ../testcz0/emdl.rho.0100.Z2.01.s.0.LE ../testcz0/emdl.rho.0100.Z2.01.s.0
+  rm -rf ../testcz0/emdl.BE ../testcz0/emdl.rho.0100.Z2.01.s.0.BE
 endif  
 
 
