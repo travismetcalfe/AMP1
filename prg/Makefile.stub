@@ -1,5 +1,5 @@
 MPIF77      = mpif77
-MPIFFLAGS   = -O2
+MPIFFLAGS   = -O3 -align -assume buffered_io -ip
 
 # TSM - 07/13/2007 ###########################################################
 

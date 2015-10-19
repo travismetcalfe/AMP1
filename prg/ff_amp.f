@@ -7,7 +7,7 @@ c
       implicit double precision (a-h,o-z)
 
       integer npar,myid,ell(100),obs,calc,high,low,match(100),tstep
-      integer n(100),peak,gap,nn,nmin,nmax,num_rat,num_r02
+      integer n(100),peak,gap,nn,nmin,nmax,num_rat,num_r02,Nm,Nv,NR
       double precision data(36),freq(100),spacing(400),err(100),target
       double precision step,log_z,avg_sys(5),Tresid,Lresid,ominusc
       double precision Teff,L_Lo,T_obs,L_obs,Terr,Lerr,offset(400)
@@ -23,7 +23,9 @@ c
       double precision d01_calc,d01_obs,d01_err,d10_calc,d10_obs,d10_err
       double precision r01_calc,r01_obs,r01_err,r10_calc,r10_obs,r10_err
       double precision r02_calc,r02_obs,r02_err,chisq_rat,chisq_r02
-      double precision r13_calc,r13_obs,r13_err
+      double precision r13_calc,r13_obs,r13_err,Dcz,fn0,sum(60)
+      double precision vL(60,5),sL(60,5),v(60),s(60),r01_o(60),U(60,60)
+      double precision dy(60),Jc(60,60),JcT(60,60),CV(60,60),CV1(60,60)
 
       logical isnan, quiet
       real userff
@@ -158,7 +160,7 @@ c
       common /csum_indiv/ icsum_ind, nstep_ind,
      *  csum_ind(icsum_max, nstep_max) 
       common /verbosity/ quiet
-      common /xmodage/ age,R_Ro,Teff,M_H,chisq
+      common /xmodage/ age,R_Ro,Dcz,Teff,M_H,fn0,Dnu_calc,chisq
 c
 c  common with pulsation RESULTS! (degree, order, frequency, inertia)
 c
@@ -180,7 +182,22 @@ c  read obs.dat file
 c
          nonseis=0
          open(55,file='obs.dat',status='old')
-         read(55,*) num_obs,iwflag,isflag,idif,Dnu_in,iovs,a_ovs
+         read(55,*) num_obs,iwflag,isflag,idflag,Dnu_in,ioflag,a_ovs
+c idif=3: turn off diffusion for M>=1.2 
+         if (idflag .le. 2) then
+            idif = idflag
+         else
+            idif = 1
+            if (data(1).ge.0.45) idif=0
+         endif
+c iovs=2: turn on overshoot for M>=1.2 
+         if (ioflag .le. 1) then
+            iovs = ioflag
+         else
+            iovs = 0
+            if (data(1).ge.0.45) iovs=1
+         endif
+c
          do obs=1,num_obs+5
             read(55,*,end=50) col1str,freq(obs),err(obs)
             if (col1str .eq. "T") then
@@ -376,7 +393,7 @@ c
      *  call trial_gridz(amtg1, amtg2, damtg, ztg1, ztg2, nztg,
      *  xhtg1, xhtg2, dxhtg, tfile, icase, header_par)
 c
-c  initialize with zero age model                                              
+c  initialize with zero age model        
 c
       xmod_new=-1
       nt_max=-1
@@ -441,10 +458,13 @@ c
       R_Ro = csum_ind(3,nstep_ind)/6.96d+10
       Teff = csum_ind(4,nstep_ind)
       L_Lo = csum_ind(5,nstep_ind)/3.846d+33
+      Dcz = csum_ind(6,nstep_ind)
       logG = log10((6.67232d-8*csum_ind(1,nstep_ind)*1.989d+33)/
      +     (csum_ind(3,nstep_ind)*csum_ind(3,nstep_ind)))
       M_H = log10(csum_ind(22,nstep_ind)/
      +            csum_ind(21,nstep_ind))+1.61d0
+c  GN93/GS98 mixture (above), AGSS09 mixture (below)
+c     +            csum_ind(21,nstep_ind))+1.48d0
       chisq_r = 1./Dnu_calc
 c
 c  OPTIMIZATION RUN
@@ -588,12 +608,14 @@ c
             R_Ro = csum_ind(3,nstep_ind)/6.96d+10
             Teff = csum_ind(4,nstep_ind)
             L_Lo = csum_ind(5,nstep_ind)/3.846d+33
+            Dcz = csum_ind(6,nstep_ind)
+            fn0 = obs_st(3,match(1))
             logG = log10((6.67232d-8*csum_ind(1,nstep_ind)*1.989d+33)/
      +             (csum_ind(3,nstep_ind)*csum_ind(3,nstep_ind)))
             M_H = log10(csum_ind(22,nstep_ind)/
      +                  csum_ind(21,nstep_ind))+1.61d0
-c            write(55,*) step,xmod_new,Dnu_calc,age,Teff,L_Lo,R_Ro
-c            call flush(55)
+c  GN93/GS98 mixture (above), AGSS09 mixture (below)
+c     +                  csum_ind(21,nstep_ind))+1.48d0
 
          enddo
 
@@ -795,7 +817,24 @@ c
                Dnu1_err(nn) = SQRT(nu_err(nn,ll)*nu_err(nn,ll) + 
      +                   nu_err(nn-1,ll)*nu_err(nn-1,ll)) / Dnu1_obs(nn)
             endif
+
          enddo
+c
+c  COVMAT: order frequencies increasing in nu: 0,1,0,1,...
+c
+         k=0
+         Nm=60
+         do nn=1,Nm
+            do l=0,1
+               ll=l+1
+               if (nu_obs(nn,ll) .gt. 0) then
+                  k=k+1
+                  v(k)=nu_obs(nn,ll)
+                  s(k)=nu_err(nn,ll)
+               endif
+            enddo
+         enddo
+         Nv=k
 c
 c  match to frequency ratios r01, r10, r02, r13
 c
@@ -825,7 +864,8 @@ c
             r01_obs = d01_obs/Dnu1_obs(nn)
             r01_err = r01_obs*SQRT(d01_err*d01_err +
      +                Dnu1_err(nn)*Dnu1_err(nn))
-            if (r01_obs.gt.0 .and. r01_obs.lt.1) then
+
+            if (r01_obs.gt.0 .and. r01_obs.lt.0.2) then
                resid = (r01_obs-r01_calc)/r01_err
                write(55,'("r01",1X,F7.2,3(1X,F10.8))')
      + nu_obs(nn,l0),r01_obs,r01_err,r01_calc
@@ -833,6 +873,9 @@ c
                if (nn .lt. nmax) then
                   num_rat = num_rat + 1
                   sum_rsq = sum_rsq + (resid*resid)
+c  COVMAT: populate arrays for covariance matrix
+                  r01_o(num_rat) = r01_obs
+                  dy(num_rat) = r01_obs-r01_calc                  
                endif
             endif
 c
@@ -852,15 +895,16 @@ c
             r10_obs = d10_obs/Dnu0_obs(nn+1)
             r10_err = r10_obs*SQRT(d10_err*d10_err +
      +                 Dnu0_err(nn+1)*Dnu0_err(nn+1))
-            if (r10_obs.gt.0 .and. r10_obs.lt.1) then
+            if (r10_obs.gt.0 .and. r10_obs.lt.0.2) then
                resid = (r10_obs-r10_calc)/r10_err
              write(55,'("r10",1X,F7.2,3(1X,F10.8))')
      + nu_obs(nn,l1),r10_obs,r10_err,r10_calc
                call flush(55)
-               if (nn .lt. nmax) then
-                  num_rat = num_rat + 1
-                  sum_rsq = sum_rsq + (resid*resid)
-               endif
+c  not independent of r01 so do not fit r10
+c               if (nn .lt. nmax) then
+c                  num_rat = num_rat + 1
+c                  sum_rsq = sum_rsq + (resid*resid)
+c               endif
             endif
 c
 c  calculate d02 and r02
@@ -873,7 +917,7 @@ c
             r02_obs = d02_obs(nn)/Dnu1_obs(nn)
             r02_err = r02_obs*SQRT(d02_err(nn)*d02_err(nn) +
      +                Dnu1_err(nn)*Dnu1_err(nn))
-            if (r02_obs.gt.0 .and. r02_obs.lt.1) then
+            if (r02_obs.gt.0 .and. r02_obs.lt.0.2) then
                resid = (r02_obs-r02_calc)/r02_err
                write(55,'("r02",1X,F7.2,3(1X,F10.8))')
      + nu_obs(nn,l0),r02_obs,r02_err,r02_calc
@@ -894,7 +938,7 @@ c
             r13_obs = d13_obs(nn)/Dnu0_obs(nn+1)
             r13_err = r13_obs*SQRT(d13_err(nn)*d13_err(nn) +
      +                Dnu0_err(nn+1)*Dnu0_err(nn+1))
-            if (r13_obs.gt.0 .and. r13_obs.lt.1) then
+            if (r13_obs.gt.0 .and. r13_obs.lt.0.2) then
                resid = (r13_obs-r13_calc)/r13_err
                write(55,'("r13",1X,F7.2,3(1X,F10.8))')
      + nu_obs(nn,l1),r13_obs,r13_err,r13_calc
@@ -906,6 +950,47 @@ c
             endif
 
          enddo
+         NR = num_rat
+c
+c  COVMAT: determine Jacobian mutiplied by error
+c
+         do j=1,NR;do k=1,Nv;Jc(j,k)=0;enddo;enddo
+         do j=1,NR
+            D=(v(2*j+2)-v(2*j))
+            Jc(j,2*j-1)= 1/D/8 *s(2*j-1)
+            Jc(j,2*j  )=-1/D/2 *s(2*j)
+            Jc(j,2*j+1)= 3/D/4 *s(2*j+1)
+            Jc(j,2*j+2)=-1/D/2 *s(2*j+2)
+            Jc(j,2*j+3)= 1/D/8 *s(2*j+3)
+            Jc(j,2*j  )=Jc(j,2*j  )+r01_o(j)/D *s(2*j)
+            Jc(j,2*j+2)=Jc(j,2*j+2)-r01_o(j)/D *s(2*j+2)
+         enddo
+c
+c  COVMAT: determine transpose
+c
+         do j=1,Nv;do k=1,NR;JcT(j,k)=Jc(k,j);enddo;enddo
+c
+c  COVMAT: multiply together
+c
+         do i=1,NR
+            do j=1,Nv
+               CV(i,j)=0
+               do k=1,Nv;CV(i,j)=CV(i,j)+Jc(i,k)*JcT(k,j);enddo
+            enddo
+         enddo
+c
+c  COVMAT: inverse of covariance matrix in CV1
+c
+         call matinv(CV,CV1,U,NR,Nm)
+c
+c  calculate chi2 using inverse covariance matrix
+c
+         do i=1,NR
+            sum(i)=0.
+            do j=1,NR;sum(i)=sum(i)+CV1(i,j)*dy(j);enddo
+         enddo
+         sum_rsq=0.
+         do i=1,NR;sum_rsq=sum_rsq+dy(i)*sum(i);enddo
 
          chisq_rat = sum_rsq/float(num_rat)
          chisq_r02 = sum_r02/float(num_r02)
@@ -941,6 +1026,7 @@ c
          chisq_spec = sum_rsq/float(nonseis)
          if (par_y .lt. 0.248) then
             penalty = 100.*(0.248-par_y)
+c  penalize sub-primordial He (above) or enforce DY/DZ (below)
 c         penalty = 100.*(par_xxh-0.752 + 2.4*par_z)
             chisq_spec = chisq_spec + penalty*penalty
          endif
@@ -985,7 +1071,7 @@ c         penalty = 100.*(par_xxh-0.752 + 2.4*par_z)
       return
       end
 
-***************************************************************************
+************************************************************************
       subroutine write_evol(myid,idif,iovs,a_ovs)
 
       implicit double precision (a-h, o-z)
@@ -1020,7 +1106,9 @@ c fallback for Stampede
      + eprgdir="/work/01038/gridamp/evolpack.stampede"
 c 3    format("13 '",a,"/opac/ghwd-v11.gn93_ax94'")
 c     A&F94 (above), Ferg05 (below)
- 3    format("13 '",a,"/opac/ghwd-v11.gn93_ax05'")
+c 3    format("13 '",a,"/opac/ghwd-v11.gn93_ax05'")
+ 3    format("13 '",a,"/opac/ghwd-v11.gs98_ax05'")
+c 3    format("13 '",a,"/opac/ghwd-v11.agss09_ax05'")
       write(55,3) eprgdir(1:length(eprgdir))
       write(55,'(A)') "14 'hvabund.g91'"
 
@@ -1146,7 +1234,7 @@ c                                nit
       return
       end
 
-***************************************************************************
+************************************************************************
       subroutine write_rdist(myid)
 
       implicit double precision (a-h, o-z)
@@ -1168,7 +1256,7 @@ c                                nit
       return
       end
 
-***************************************************************************
+************************************************************************
       subroutine write_adi(myid)
 
       implicit double precision (a-h, o-z)
@@ -1186,6 +1274,7 @@ c                                nit
          write(55,'(A)') "31 '0'"
          write(55,'(A)') "35 '0'"
       else
+c filename for eigenfunctions (below)
 c         write(55,'(A)') "4 'amdl/amde'"
          write(55,'(A)') "39 'ttt/ttt.adipls.prt'"
          write(55,'(A)') "32 'osc/rotker'"
@@ -1221,7 +1310,42 @@ c      write(55,'(A)') "1,,,,3,,,,,,,,,,,"
       return
       end
 
-***************************************************************************
+************************************************************************
+      subroutine matinv(A,B,C,N,Na)
+
+      implicit none
+
+      integer N,Na,i,j,k,im,m
+      double precision A(Na,Na),B(Na,Na),C(Na,Na),Bij,Ckm,Cik
+************************************************************************
+*     iwr's inverse of matrix A(i,j), i,j=1,N by Gaussian Elimination   
+*     with pivoting by columns. returns original A, inverse B, C=I      
+************************************************************************
+c  set C=A to leave A unchanged and B(i,j)=unit matrix               
+      do i=1,N;do j=1,N;C(i,j)=A(i,j);B(i,j)=0;enddo;B(i,i)=1;enddo
+
+      do k=1,N
+c  find the largest element in column k between (k,n)
+         Ckm=DABS(C(k,k));im=k
+         do i=k+1,n;Cik=DABS(C(i,k));if(Cik.gt.Ckm) then
+         Ckm=Cik;im=i;endif;enddo;Ckm=C(im,k)
+c  the largest element is C(im,k), interchange row k with row im
+         do j=k,n;Cik=C(im,j);C(im,j)=C(k,j);C(k,j)=Cik/Ckm;enddo
+c  interchange on B(im,j) all j
+         do j=1,N;Bij=B(im,j);B(im,j)=B(k,j);B(k,j)=Bij/Ckm;enddo
+c  Gaussian elimination to set C(k,j) delta(k,j)
+         do i=1,N
+          if(i.ne.k) then;Cik=C(i,k)/C(k,k)
+             do j=k,n;C(i,j)=C(i,j)-Cik*C(k,j);enddo
+             do j=1,N; B(i,j)=B(i,j)-Cik*B(k,j);enddo
+          endif
+          enddo
+      enddo
+
+      return
+      end
+
+************************************************************************
       function isnan(f)
 
       implicit none
@@ -1238,5 +1362,5 @@ c      write(55,'(A)') "1,,,,3,,,,,,,,,,,"
        return
        end
 
-***************************************************************************
+************************************************************************
 

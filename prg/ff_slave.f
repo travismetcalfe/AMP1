@@ -9,11 +9,11 @@ c ---------------------------------------------
       integer myid, ierr, status(MPI_STATUS_SIZE)
       integer master, msgtype, trial, n, i
       double precision data(32),result,age
-      double precision R_Ro,Teff,M_H,chisq(4)
+      double precision R_Ro,Dcz,Teff,M_H,fn0,Dnu_calc,chisq(4)
       real userff
       logical quiet
       common /verbosity/ quiet
-      common /xmodage/ age,R_Ro,Teff,M_H,chisq
+      common /xmodage/ age,R_Ro,Dcz,Teff,M_H,fn0,Dnu_calc,chisq
 
       external userff
       quiet = .TRUE.
@@ -62,9 +62,15 @@ c ---------------------------------------------
      +       master, msgtype, MPI_COMM_WORLD, ierr )
       call mpi_send( R_Ro, 1, MPI_DOUBLE_PRECISION, 
      +       master, msgtype, MPI_COMM_WORLD, ierr )
+      call mpi_send( Dcz, 1, MPI_DOUBLE_PRECISION, 
+     +       master, msgtype, MPI_COMM_WORLD, ierr )
       call mpi_send( Teff, 1, MPI_DOUBLE_PRECISION, 
      +       master, msgtype, MPI_COMM_WORLD, ierr )
       call mpi_send( M_H, 1, MPI_DOUBLE_PRECISION, 
+     +       master, msgtype, MPI_COMM_WORLD, ierr )
+      call mpi_send( fn0, 1, MPI_DOUBLE_PRECISION, 
+     +       master, msgtype, MPI_COMM_WORLD, ierr )
+      call mpi_send( Dnu_calc, 1, MPI_DOUBLE_PRECISION, 
      +       master, msgtype, MPI_COMM_WORLD, ierr )
       call mpi_send( chisq, 4, MPI_DOUBLE_PRECISION, 
      +       master, msgtype, MPI_COMM_WORLD, ierr )

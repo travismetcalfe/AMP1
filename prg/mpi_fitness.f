@@ -10,7 +10,7 @@ c ---------------------------------------------
       integer msgtype, job, num_jobs, trial, slave
       integer par, npar, status(MPI_STATUS_SIZE)
       double precision data(32),result,age
-      double precision R_Ro,Teff,M_H,chisq(4)
+      double precision R_Ro,Dcz,Teff,M_H,fn0,Dnu_calc,chisq(4)
       real oldph(32,1024), fitness(1024), youth(1024)
       character*10 datest, timest, zonest
       logical receiving
@@ -68,9 +68,15 @@ c ---------------------------------------------
      +                     msgtype, MPI_COMM_WORLD, status, ierr )
             call mpi_recv( R_Ro, 1, MPI_DOUBLE_PRECISION, slave,
      +                     msgtype, MPI_COMM_WORLD, status, ierr )
+            call mpi_recv( Dcz, 1, MPI_DOUBLE_PRECISION, slave,
+     +                     msgtype, MPI_COMM_WORLD, status, ierr )
             call mpi_recv( Teff, 1, MPI_DOUBLE_PRECISION, slave,
      +                     msgtype, MPI_COMM_WORLD, status, ierr )
             call mpi_recv( M_H, 1, MPI_DOUBLE_PRECISION, slave,
+     +                     msgtype, MPI_COMM_WORLD, status, ierr )
+            call mpi_recv( fn0, 1, MPI_DOUBLE_PRECISION, slave,
+     +                     msgtype, MPI_COMM_WORLD, status, ierr )
+            call mpi_recv( Dnu_calc, 1, MPI_DOUBLE_PRECISION, slave,
      +                     msgtype, MPI_COMM_WORLD, status, ierr )
             call mpi_recv( chisq, 4, MPI_DOUBLE_PRECISION, slave,
      +                     msgtype, MPI_COMM_WORLD, status, ierr )
@@ -81,11 +87,12 @@ c ---------------------------------------------
 
 c remove system call to improve performance
 c            call date_and_time(datest, timest, zonest, valuest)
-    9       format(A10,": job",i3.3,4(1x,f4.2),2(1x,e12.6),
-     +             1x,F5.3,1x,F7.1,1x,F6.3,4(1x,F7.3))
+    9       format(A10,": job",i3.3,4(1x,f4.2),2(1x,e12.6),1x,
+     +        F5.3,1x,F7.5,1x,F7.1,1x,F6.3,1x,F7.2,1x,F7.2,4(1x,F7.3))
 	    write(*,9) timest,trial,oldph(1,trial),oldph(2,trial),
      +        oldph(3,trial),oldph(4,trial),fitness(trial),age,
-     +        R_Ro,Teff,M_H,chisq(1),chisq(2),chisq(3),chisq(4)
+     +        R_Ro,Dcz,Teff,M_H,fn0,Dnu_calc,chisq(1),chisq(2),
+     +        chisq(3),chisq(4)
 
 c ---------------------------------------------
 c     send new job to responding node
