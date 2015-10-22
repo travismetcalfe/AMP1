@@ -462,9 +462,10 @@ c
       logG = log10((6.67232d-8*csum_ind(1,nstep_ind)*1.989d+33)/
      +     (csum_ind(3,nstep_ind)*csum_ind(3,nstep_ind)))
       M_H = log10(csum_ind(22,nstep_ind)/
-     +            csum_ind(21,nstep_ind))+1.61d0
-c  GN93/GS98 mixture (above), AGSS09 mixture (below)
-c     +            csum_ind(21,nstep_ind))+1.48d0
+cGN93 +            csum_ind(21,nstep_ind))+1.61d0
+     +            csum_ind(21,nstep_ind))+1.64d0
+c GN93/GS98 mixture (above), AGSS09 mixture (below)
+c     +            csum_ind(21,nstep_ind))+1.74d0
       chisq_r = 1./Dnu_calc
 c
 c  OPTIMIZATION RUN
@@ -613,9 +614,10 @@ c
             logG = log10((6.67232d-8*csum_ind(1,nstep_ind)*1.989d+33)/
      +             (csum_ind(3,nstep_ind)*csum_ind(3,nstep_ind)))
             M_H = log10(csum_ind(22,nstep_ind)/
-     +                  csum_ind(21,nstep_ind))+1.61d0
-c  GN93/GS98 mixture (above), AGSS09 mixture (below)
-c     +                  csum_ind(21,nstep_ind))+1.48d0
+cGN93 +            csum_ind(21,nstep_ind))+1.61d0
+     +            csum_ind(21,nstep_ind))+1.64d0
+c GN93/GS98 mixture (above), AGSS09 mixture (below)
+c     +            csum_ind(21,nstep_ind))+1.74d0
 
          enddo
 
