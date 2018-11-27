@@ -27,7 +27,7 @@ c     Set control variables (use defaults)
    10 continue
 
 *** num trial soltns
-      ctrl(1)=126
+      ctrl(1)=128
 *** num generations
       ctrl(2)=200
 *** length of gene
@@ -485,7 +485,8 @@ c     Make sure locally-dimensioned arrays are big enough
 c
 cRESTART if restart file exists, read in and jump below
 c
-      sgen=ngen
+      sgen=1
+      restarted=.FALSE.
       inquire(file='restart.dump',exist=file_exists)
       if (file_exists) then
          restarted=.TRUE.
