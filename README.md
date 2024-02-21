@@ -1,5 +1,4 @@
-AMP 1.3
-
+# AMP1
 Asteroseismic Modeling Portal
 
 Version 1.3 of the AMP science code is built around the ASTEC stellar evolution code and the ADIPLS pulsation code. This version was used for the results presented in Creevey et al. (2017), which contains a brief history of previous minor versions.
@@ -7,7 +6,7 @@ Version 1.3 of the AMP science code is built around the ASTEC stellar evolution 
 git clone https://github.com/travismetcalfe/amp1
 
 and follow the instructions in INSTALL.
-
+___________________________________________________________________________________________________________________
 If you use AMP for a publication, please cite Metcalfe et al. (2009):
 
 @ARTICLE{2009ApJ...699..373M,
