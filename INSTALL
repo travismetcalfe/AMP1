@@ -3,13 +3,13 @@
 ============================================================
 
 1. Copy source code repository to user home directory:
-   svn co https://svn.nfit.au.dk/svn/AMP/ ~/evolpack
+   git clone https://github.com/travismetcalfe/amp1
 
 2. Setup makefiles for your compiler and flags:
-   cd ~/evolpack/prg
+   cd ~/amp1/prg
    setups -help
    setups
-   setenv eprgdir ~/evolpack
+   setenv eprgdir ~/amp1
    cat Makefile.stub >> Makefile
 
 3. Compile and run serial AMP test functions:
